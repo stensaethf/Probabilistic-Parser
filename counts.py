@@ -4,16 +4,6 @@ Frederik Roenn Stensaeth, Phineas Callahan
 11.19.15
 '''
 
-# NOTES TO SELF:
-# node
-# -> node.children -> list
-# first one is left child
-
-# end:
-# node.children == []
-
-# node.value
-
 def getCounts(counts_dict, root):
 	"""
 	getCounts() takes a tree and updates the counts dictionary based on what
@@ -53,6 +43,31 @@ def getCounts(counts_dict, root):
 			counts_dict = getCounts(counts_dict, child_node)
 
 	return counts_dict
+
+def getProbabilities(counts_dict):
+	"""
+	getProbabilities() takes a counts_dict and converts the counts to 
+	probabilities. A new dictionary containing the probabilities is returned.
+
+	@params: counts dictionary.
+	@return: probabilities dictionary.
+	"""
+	prob_dict = {}
+
+	# Loops over every entry in the counts dictionary and converts to
+	# probability.
+	for lhs in counts_dict:
+		prob_dict[lhs] = {}
+
+		for rhs in counts_dict[lhs]:
+			if rhs != 0:
+				# Calculates the probability of the given grammar rule by
+				# dividing the counts of left hand side by the count of
+				# the grammar rule.
+				prob = counts_dict[lhs][rhs] / counts_dict[lhs][0]
+				prob_dict[lhs][rhs] = prob
+
+	return prob_dict
 
 
 
