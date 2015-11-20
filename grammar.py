@@ -52,95 +52,177 @@ def convertToCNF(filename):
 
                 rhs_split = rhs.split(' <br> ')
 
-                if len(rhs_split) > 2:
-                    rhs_temp = rhs_split
-                    lhs_temp = lhs
+                rhs_temp = rhs_split
+                lhs_temp = lhs
 
-                    while len(rhs_temp) > 1:
-                        new_rhs = rhs_temp[0] + ' X' + str(count)
+                if len(rhs_temp) <= 2:
+                    rhs_0_change = re.sub(' ', '-', rhs_temp[0])
+                    if rhs_0_change != rhs_0_change.upper():
+                        rhs_0_change = rhs_0_change.upper()
 
-                        # RHS is not in all uppercase, so we need to create a new
-                        # rule for it.
-                        if rhs_temp[0] != rhs_temp[0].upper():
-                            # rule = 'Y' + str(count_unit) + ' , ' + rhs_temp[0] + ' , ' + str(1)
-                            rhs_upper = re.sub(' ', '-', rhs_temp[0].upper()) + '_NEW'
-                            # new_rhs = 'Y' + str(count_unit) + ' X' + str(count)
-                            new_rhs = rhs_upper + ' X' + str(count)
-                            rule = rhs_upper + ' , ' + rhs_temp[0] + ' , ' + str(1)
+                    if rhs_temp[0] != rhs_0_change:
+                        rhs_0_change = rhs_0_change + '_NEW'
+                        rule = rhs_0_change + ' , ' + rhs_temp[0] + ' , ' + str(1)
+                        if rule not in rule_dict:
+                            rule_dict[rule] = True
+                            f.write(rule + '\n')
+
+                        rhs_temp[0] = rhs_0_change
+
+
+                    if len(rhs_temp) == 2:
+                        rhs_1_change = re.sub(' ', '-', rhs_temp[1])
+                        if rhs_1_change != rhs_1_change.upper():
+                            rhs_1_change = rhs_1_change.upper()
+
+                        if rhs_temp[1] != rhs_1_change:
+                            rhs_0_change = rhs_1_change + '_NEW'
+                            rule = rhs_1_change + ' , ' + rhs_temp[1] + ' , ' + str(1)
                             if rule not in rule_dict:
                                 rule_dict[rule] = True
                                 f.write(rule + '\n')
-                            rhs_temp[0] = rhs_upper
+
+                            rhs_temp[1] = rhs_1_change
+
+                    rule = lhs_temp + ' , ' + ' '.join(rhs_temp) + ' , ' + str(prob)
+                    f.write(rule + '\n')
+                else:
+                    # > 2
+                    while len(rhs_temp) > 1:
+                        rhs_0_change = re.sub(' ', '-', rhs_temp[0])
+                        if rhs_0_change != rhs_0_change.upper():
+                            rhs_0_change = rhs_0_change.upper()
+
+                        if rhs_temp[0] != rhs_0_change:
+                            rhs_0_change = rhs_0_change + '_NEW'
+                            rule = rhs_0_change + ' , ' + rhs_temp[0] + ' , ' + str(1)
+                            if rule not in rule_dict:
+                                rule_dict[rule] = True
+                                f.write(rule + '\n')
+
+                            rhs_temp[0] = rhs_0_change
 
                         if len(rhs_temp) == 2:
-                            if rhs_temp[1] != rhs_temp[1].upper():
-                                rhs_upper_1 = re.sub(' ', '-', rhs_temp[1].upper()) + '_NEW'
-                                rhs_upper_0 = re.sub(' ', '-', rhs_temp[0].upper()) + '_NEW'
-                                rule = rhs_upper_1 + ' , ' + rhs_temp[1] + ' , ' + str(1)
+                            rhs_1_change = re.sub(' ', '-', rhs_temp[1])
+                            if rhs_1_change != rhs_1_change.upper():
+                                rhs_1_change = rhs_1_change.upper()
+
+                            if rhs_temp[1] != rhs_1_change:
+                                rhs_0_change = rhs_1_change + '_NEW'
+                                rule = rhs_1_change + ' , ' + rhs_temp[1] + ' , ' + str(1)
                                 if rule not in rule_dict:
                                     rule_dict[rule] = True
                                     f.write(rule + '\n')
 
-                                new_rhs = rhs_upper_0 + rhs_upper_1
-                                rhs_temp[1] = rhs_upper_1
+                                rhs_temp[1] = rhs_1_change
 
-                        # Only the initial rule should have the original probability.
-                        if lhs_temp == lhs:
-                            rule = lhs_temp + ' , ' + new_rhs + ' , ' + str(prob)
-                        # Special case the situation where we only have two items
-                        # left, as we then do not want to create a new rule.
-                        elif len(rhs_temp) == 2:
-                            new_rhs = ' '.join(rhs_temp)
-                            rule = lhs_temp + ' , ' + new_rhs + ' , ' + str(1)
+                            rule = lhs_temp + ' , ' + ' '.join(rhs_temp) + ' , ' + str(1)
+                            f.write(rule + '\n')
+
                         else:
-                            rule = lhs_temp + ' , ' + new_rhs + ' , ' + str(1)
+                            new_rhs = rhs_temp[0] + ' X' + str(count)
 
-                        f.write(rule + '\n')
-
-                        rhs_temp = rhs_temp[1:]
-                        lhs_temp = 'X' + str(count)
-                        count += 1
-
-                elif len(rhs_split) == 2:
-                    rhs_temp = rhs_split
-                    lhs_temp = lhs
-
-                    if rhs_temp[0] != rhs_temp[0].upper():
-                        # rule = 'Y' + str(count_unit) + ' , ' + rhs_temp[0] + ' , ' + str(1)
-                        rhs_upper = re.sub(' ', '-', rhs_temp[0].upper()) + '_NEW'
-                        # new_rhs = 'Y' + str(count_unit) + ' X' + str(count)
-                        rule = rhs_upper + ' , ' + rhs_temp[0] + ' , ' + str(1)
-                        if rule not in rule_dict:
-                            rule_dict[rule] = True
-                            f.write(rule + '\n')
-                        rhs_temp[0] = rhs_upper
-
-                    if rhs_temp[1] != rhs_temp[1].upper():
-                        rhs_upper_1 = re.sub(' ', '-', rhs_temp[1].upper()) + '_NEW'
-                        rule = rhs_upper_1 + ' , ' + rhs_temp[1] + ' , ' + str(1)
-                        if rule not in rule_dict:
-                            rule_dict[rule] = True
-                            f.write(rule + '\n')
-                        rhs_temp[1] = rhs_upper_1
-
-                    rule = lhs + ' , ' + ' '.join(rhs_temp) + ' , ' + str(prob)
-                    f.write(rule + '\n')
-
-                else:
-                    rhs_temp = rhs_split
-                    lhs_temp = lhs
-
-                    if rhs_temp[0] != rhs_temp[0].upper():
-                        # rule = 'Y' + str(count_unit) + ' , ' + rhs_temp[0] + ' , ' + str(1)
-                        rhs_upper = re.sub(' ', '-', rhs_temp[0].upper()) + '_NEW'
-                        # new_rhs = 'Y' + str(count_unit) + ' X' + str(count)
-                        rule = rhs_upper + ' , ' + rhs_temp[0] + ' , ' + str(1)
-                        if rule not in rule_dict:
-                            rule_dict[rule] = True
+                            if lhs_temp == lhs:
+                                rule = lhs_temp + ' , ' + new_rhs + ' , ' + str(prob)
+                            else:
+                                rule = lhs_temp + ' , ' + new_rhs + ' , ' + str(1)
                             f.write(rule + '\n')
 
-                    rule = lhs + ' , ' + rhs_upper + ' , ' + str(prob)
-                    f.write(rule + '\n')
+                            rhs_temp = rhs_temp[1:]
+                            lhs_temp = 'X' + str(count)
+                            count += 1
+
+
+
+                # if len(rhs_split) > 2:
+                #     rhs_temp = rhs_split
+                #     lhs_temp = lhs
+
+                #     while len(rhs_temp) > 1:
+                #         new_rhs = rhs_temp[0] + ' X' + str(count)
+
+                #         # RHS is not in all uppercase, so we need to create a new
+                #         # rule for it.
+                #         if rhs_temp[0] != rhs_temp[0].upper():
+                #             # rule = 'Y' + str(count_unit) + ' , ' + rhs_temp[0] + ' , ' + str(1)
+                #             rhs_upper = re.sub(' ', '-', rhs_temp[0].upper()) + '_NEW'
+                #             # new_rhs = 'Y' + str(count_unit) + ' X' + str(count)
+                #             new_rhs = rhs_upper + ' X' + str(count)
+                #             rule = rhs_upper + ' , ' + rhs_temp[0] + ' , ' + str(1)
+                #             if rule not in rule_dict:
+                #                 rule_dict[rule] = True
+                #                 f.write(rule + '\n')
+                #             rhs_temp[0] = rhs_upper
+
+                #         if len(rhs_temp) == 2:
+                #             if rhs_temp[1] != rhs_temp[1].upper():
+                #                 rhs_upper_1 = re.sub(' ', '-', rhs_temp[1].upper()) + '_NEW'
+                #                 rhs_upper_0 = re.sub(' ', '-', rhs_temp[0].upper()) + '_NEW'
+                #                 rule = rhs_upper_1 + ' , ' + rhs_temp[1] + ' , ' + str(1)
+                #                 if rule not in rule_dict:
+                #                     rule_dict[rule] = True
+                #                     f.write(rule + '\n')
+
+                #                 new_rhs = rhs_upper_0 + rhs_upper_1
+                #                 rhs_temp[1] = rhs_upper_1
+
+                #         # Only the initial rule should have the original probability.
+                #         if lhs_temp == lhs:
+                #             rule = lhs_temp + ' , ' + new_rhs + ' , ' + str(prob)
+                #         # Special case the situation where we only have two items
+                #         # left, as we then do not want to create a new rule.
+                #         elif len(rhs_temp) == 2:
+                #             new_rhs = ' '.join(rhs_temp)
+                #             rule = lhs_temp + ' , ' + new_rhs + ' , ' + str(1)
+                #         else:
+                #             rule = lhs_temp + ' , ' + new_rhs + ' , ' + str(1)
+
+                #         f.write(rule + '\n')
+
+                #         rhs_temp = rhs_temp[1:]
+                #         lhs_temp = 'X' + str(count)
+                #         count += 1
+
+                # elif len(rhs_split) == 2:
+                #     rhs_temp = rhs_split
+                #     lhs_temp = lhs
+
+                #     if rhs_temp[0] != rhs_temp[0].upper():
+                #         # rule = 'Y' + str(count_unit) + ' , ' + rhs_temp[0] + ' , ' + str(1)
+                #         rhs_upper = re.sub(' ', '-', rhs_temp[0].upper()) + '_NEW'
+                #         # new_rhs = 'Y' + str(count_unit) + ' X' + str(count)
+                #         rule = rhs_upper + ' , ' + rhs_temp[0] + ' , ' + str(1)
+                #         if rule not in rule_dict:
+                #             rule_dict[rule] = True
+                #             f.write(rule + '\n')
+                #         rhs_temp[0] = rhs_upper
+
+                #     if rhs_temp[1] != rhs_temp[1].upper():
+                #         rhs_upper_1 = re.sub(' ', '-', rhs_temp[1].upper()) + '_NEW'
+                #         rule = rhs_upper_1 + ' , ' + rhs_temp[1] + ' , ' + str(1)
+                #         if rule not in rule_dict:
+                #             rule_dict[rule] = True
+                #             f.write(rule + '\n')
+                #         rhs_temp[1] = rhs_upper_1
+
+                #     rule = lhs_temp + ' , ' + ' '.join(rhs_temp) + ' , ' + str(prob)
+                #     f.write(rule + '\n')
+
+                # else:
+                #     rhs_temp = rhs_split
+                #     lhs_temp = lhs
+
+                #     if rhs_temp[0] != rhs_temp[0].upper():
+                #         # rule = 'Y' + str(count_unit) + ' , ' + rhs_temp[0] + ' , ' + str(1)
+                #         rhs_upper = re.sub(' ', '-', rhs_temp[0].upper()) + '_NEW'
+                #         # new_rhs = 'Y' + str(count_unit) + ' X' + str(count)
+                #         rule = rhs_upper + ' , ' + rhs_temp[0] + ' , ' + str(1)
+                #         if rule not in rule_dict:
+                #             rule_dict[rule] = True
+                #             f.write(rule + '\n')
+
+                #     rule = lhs_temp + ' , ' + rhs_upper + ' , ' + str(prob)
+                #     f.write(rule + '\n')
             
 #    cfg.close()
 #    f.close()
