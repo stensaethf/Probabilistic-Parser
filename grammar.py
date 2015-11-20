@@ -9,7 +9,30 @@ Frederik Roenn Stensaeth, Phineas Callahan
 # LHS , RHS , prob
 # Example: S , NP VP , 0.5
 
-import re
+import re, string
+
+class Grammar:
+    
+    def __init__(self, E, N, R, S = 'TOP'):
+        self.terminals = E
+        self.non_terminals = N
+        self.rules = R
+        self.start_symbol = R
+
+        
+def read_grammar(input_file):
+    rule = []
+    terminals = set()
+    non_terminals = set()
+    
+    for line in input_file:
+        if len(line) and line[0] != '#':
+            rule = map(string.strip, line.split(',')))
+            rules.append(tuple(values))
+            non_terminals.add(rule[0])
+            terminals.add(map(string.strip, rules[1].split('<br>')))
+            
+        
 
 def storeGrammar(prob_dict):
     """
@@ -145,16 +168,7 @@ def convertToCNF(filename):
 #    cfg.close()
 #    f.close()
 
-# # TEST
-# def main():
-# 	d = {}
-# 	d['A'] = {}
-# 	d['B'] = {}
-# 	d['A']['aa zz <br> aa <br> aa <br> bb'] = 0.5
-# 	# d['B']['BB BB'] = 0.9
+#TEST
 
-# 	storeGrammar(d)
-# 	convertToCNF('cfg.txt')
-
-# if __name__ == '__main__':
-# 	main()
+#if __name__ == '__main__':
+#    main()

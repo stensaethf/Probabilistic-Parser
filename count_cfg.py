@@ -71,12 +71,17 @@ def main():
         f = open(file_path, 'rb')
         trees.extend(read_trees(f))
     
+    print len(trees)
+    
+    
     raw_counts = {}
     for tree in trees:
         counts.getCounts(raw_counts, tree)
         
     probs = counts.getProbabilities(raw_counts)
     grammar.storeGrammar(probs)
+    
+    grammar.read_grammar(open('cnf.txt', 'rb'))
     grammar.convertToCNF('cfg.txt')
     
 if __name__=='__main__':
