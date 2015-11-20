@@ -1,38 +1,5 @@
-import sys, os, types, counts, grammar
+import sys, os, types, counts, grammar, parse
 
-class ParseNode:
-    def __init__(self, val):
-        self.children = list()
-        self.value = val
-
-    def append(self, node):
-        self.children.append(node)
-        
-    def __str__(self):
-        return self.recursive_print(0)
-    
-    def recursive_print(self, indent):
-        if len(self.children):
-            all_terminal = True
-            for child in self.children:
-                if len(child.children):
-                    all_terminal = False
-            
-            s = '('+self.value+' '
-            indent = indent+len(s)
-            for child in self.children[:-1]:
-                s += child.recursive_print(indent)
-                if all_terminal:
-                    s+= ' '
-                else:
-                    s += '\n'+' '*indent
-        
-            s += self.children[-1].recursive_print(indent)+')'
-        else:
-            s = self.value
-        
-        return s
-            
 def read_trees(f):
     tokens = []
     for line in f:
@@ -48,7 +15,7 @@ def recursiveParse(tokens):
         nodeValue = 'TOP'
         tokens.insert(0, '(')
     
-    node = ParseNode(nodeValue)
+    node = parse.ParseNode(nodeValue)
     while len(tokens):
         token = tokens.pop(0)
         if token == ')':
@@ -56,7 +23,7 @@ def recursiveParse(tokens):
         elif token == '(':
             node.append(recursiveParse(tokens))
         else:
-            node.append(ParseNode(token))
+            node.append(parse.ParseNode(token))
         
     
     return node
@@ -71,9 +38,6 @@ def main():
         f = open(file_path, 'rb')
         trees.extend(read_trees(f))
     
-    print len(trees)
-    
-    
     raw_counts = {}
     for tree in trees:
         counts.getCounts(raw_counts, tree)
@@ -82,7 +46,11 @@ def main():
     grammar.storeGrammar(probs)
     grammar.convertToCNF('cfg.txt')
     
-    grammar.read_grammar(open('cnf.txt', 'rb'))
+    g = grammar.read_grammar(open('cnf.txt', 'rb'))
+    words = ['The', 'dog', 'jumps']
+    parsed_trees = parse.parse(g, words)
+    for tree in parsed_trees:
+        print tree
     
 if __name__=='__main__':
     main()

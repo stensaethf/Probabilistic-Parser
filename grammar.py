@@ -13,21 +13,35 @@ import re, string
 
 class Grammar:
     
-    def __init__(self, E, N, R, S = 'S'):
+    def __init__(self, E, N, R, S = 'TOP'):
         self.rules = R
         self.non_terminals = N
         self.terminals = E
         self.start_symbol = S
         
 def read_grammar(input_file):
-    rules = []
+    rules = {}
     non_terminals = set()
     terminals = set()
     
     for line in input_file:
         rule = map(string.strip, line.split('|'))
-        rules.append(tuple(rule))
-        print tuple(rule)
+        
+        entry = {}
+        if rule[0] in rules:
+            entry = rules[rule[0]]
+        else:
+            rules[rule[0]] = entry
+        
+        entry[rule[1]] = rule[-1]
+        
+        non_terminals.add(rule[0])
+        if rule[1] == rule[1].upper():
+            non_terminals.update(rule[1].split())
+        else:
+            terminals.add(rule[1])
+        
+    return Grammar(terminals, non_terminals, rules)
 
 def storeGrammar(prob_dict):
     """
