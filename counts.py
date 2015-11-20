@@ -30,7 +30,7 @@ def getCounts(counts_dict, root):
 		child_list = []
 		for child_node in root.children:
 			child_list.append(child_node.value)
-		child_str = ' '.join(child_list)
+		child_str = ' <br> '.join(child_list)
 
 		# If the grammar rule has been seen before we increment the count, if
 		# not we set the count to 1.
@@ -85,7 +85,7 @@ def getProbabilities(counts_dict):
 # 	d['a']['bb'] = 6
 # 	d['d'] = {}
 
-# 	prob = getProbabilities(d)
+# 	prob = getCounts(d)
 
 # 	print(prob)
 
