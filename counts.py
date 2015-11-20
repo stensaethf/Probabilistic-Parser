@@ -67,7 +67,7 @@ def getProbabilities(counts_dict):
 				# Calculates the probability of the given grammar rule by
 				# dividing the counts of left hand side by the count of
 				# the grammar rule.
-				prob = counts_dict[lhs][rhs] / counts_dict[lhs][0]
+				prob = counts_dict[lhs][rhs] / float(counts_dict[lhs][0])
 				prob_dict[lhs][rhs] = prob
 
 		if prob_dict[lhs] == {}:

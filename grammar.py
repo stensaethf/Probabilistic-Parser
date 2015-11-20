@@ -12,21 +12,20 @@ Frederik Roenn Stensaeth, Phineas Callahan
 import re
 
 def storeGrammar(prob_dict):
-	"""
-	storeGrammar() takes a probabilities dictionary and stores all the
-	grammar rules with their associated probabilities in grammar.txt.
+    """
+    storeGrammar() takes a probabilities dictionary and stores all the
+    grammar rules with their associated probabilities in grammar.txt.
+    
+    @params: probabilities dictionary.
+    @return: n/a.
+    """
+    with open('cfg.txt', 'w') as f:
+        for lhs in prob_dict:
+            for rhs in prob_dict[lhs]:
+                rule = lhs + ' , ' + rhs + ' , ' + str(prob_dict[lhs][rhs])
+                f.write(rule + '\n')
 
-	@params: probabilities dictionary.
-	@return: n/a.
-	"""
-	f = open('cfg.txt', 'w')
-
-	for lhs in prob_dict:
-		for rhs in prob_dict[lhs]:
-			rule = lhs + ' , ' + rhs + ' , ' + str(prob_dict[lhs][rhs])
-			f.write(rule + '\n')
-
-	f.close()
+#	f.close()
 
 def convertToCNF(filename):
 	"""
