@@ -11,29 +11,6 @@ Frederik Roenn Stensaeth, Phineas Callahan
 
 import re, string
 
-class Grammar:
-    
-    def __init__(self, E, N, R, S = 'TOP'):
-        self.terminals = E
-        self.non_terminals = N
-        self.rules = R
-        self.start_symbol = R
-
-        
-def read_grammar(input_file):
-    rule = []
-    terminals = set()
-    non_terminals = set()
-    
-    for line in input_file:
-        if len(line) and line[0] != '#':
-            rule = map(string.strip, line.split(',')))
-            rules.append(tuple(values))
-            non_terminals.add(rule[0])
-            terminals.add(map(string.strip, rules[1].split('<br>')))
-            
-        
-
 def storeGrammar(prob_dict):
     """
     storeGrammar() takes a probabilities dictionary and stores all the
@@ -47,8 +24,6 @@ def storeGrammar(prob_dict):
             for rhs in prob_dict[lhs]:
                 rule = lhs + ' , ' + rhs + ' , ' + str(prob_dict[lhs][rhs])
                 f.write(rule + '\n')
-
-#	f.close()
 
 def convertToCNF(filename):
     """
@@ -75,69 +50,98 @@ def convertToCNF(filename):
 
                 rhs_split = rhs.split(' <br> ')
 
-                if len(rhs_split) > 2:
-                    rhs_temp = rhs_split
-                    lhs_temp = lhs
+                rhs_temp = rhs_split
+                lhs_temp = lhs
 
-                    while len(rhs_temp) > 1:
-                        new_rhs = rhs_temp[0] + ' X' + str(count)
+                if len(rhs_temp) <= 2: # aka length is 1 or 2.
+                    rhs_0_change = re.sub(' ', '-', rhs_temp[0])
+                    if rhs_0_change != rhs_0_change.upper():
+                        rhs_0_change = rhs_0_change.upper()
 
-                        # RHS is not in all uppercase, so we need to create a new
-                        # rule for it.
-                        if rhs_temp[0] != rhs_temp[0].upper():
-                            # rule = 'Y' + str(count_unit) + ' , ' + rhs_temp[0] + ' , ' + str(1)
-                            rhs_upper = re.sub(' ', '-', rhs_temp[0].upper()) + '_NEW'
-                            # new_rhs = 'Y' + str(count_unit) + ' X' + str(count)
-                            new_rhs = rhs_upper + ' X' + str(count)
-                            rule = rhs_upper + ' , ' + rhs_temp[0] + ' , ' + str(1)
+                    if rhs_temp[0] != rhs_0_change:
+                        rhs_0_change = rhs_0_change + '_NEW'
+                        rule = rhs_0_change + ' , ' + rhs_temp[0] + ' , ' + str(1)
+                        if rule not in rule_dict:
+                            rule_dict[rule] = True
+                            f.write(rule + '\n')
+
+                        rhs_temp[0] = rhs_0_change
+
+
+                    if len(rhs_temp) == 2:
+                        rhs_1_change = re.sub(' ', '-', rhs_temp[1])
+                        if rhs_1_change != rhs_1_change.upper():
+                            rhs_1_change = rhs_1_change.upper()
+
+                        if rhs_temp[1] != rhs_1_change:
+                            rhs_1_change = rhs_1_change + '_NEW'
+                            rule = rhs_1_change + ' , ' + rhs_temp[1] + ' , ' + str(1)
                             if rule not in rule_dict:
                                 rule_dict[rule] = True
                                 f.write(rule + '\n')
-                            rhs_temp[0] = rhs_upper
+
+                            rhs_temp[1] = rhs_1_change
+
+                    rule = lhs_temp + ' , ' + ' '.join(rhs_temp) + ' , ' + str(prob)
+                    f.write(rule + '\n')
+                else:
+                    # > 2
+                    while len(rhs_temp) > 1:
+                        rhs_0_change = re.sub(' ', '-', rhs_temp[0])
+                        if rhs_0_change != rhs_0_change.upper():
+                            rhs_0_change = rhs_0_change.upper()
+
+                        if rhs_temp[0] != rhs_0_change:
+                            rhs_0_change = rhs_0_change + '_NEW'
+                            rule = rhs_0_change + ' , ' + rhs_temp[0] + ' , ' + str(1)
+                            if rule not in rule_dict:
+                                rule_dict[rule] = True
+                                f.write(rule + '\n')
+
+                            rhs_temp[0] = rhs_0_change
 
                         if len(rhs_temp) == 2:
-                            if rhs_temp[1] != rhs_temp[1].upper():
-                                rhs_upper_1 = re.sub(' ', '-', rhs_temp[1].upper()) + '_NEW'
-                                rhs_upper_0 = re.sub(' ', '-', rhs_temp[0].upper()) + '_NEW'
-                                rule = rhs_upper_1 + ' , ' + rhs_temp[1] + ' , ' + str(1)
+                            rhs_1_change = re.sub(' ', '-', rhs_temp[1])
+                            if rhs_1_change != rhs_1_change.upper():
+                                rhs_1_change = rhs_1_change.upper()
+
+                            if rhs_temp[1] != rhs_1_change:
+                                rhs_1_change = rhs_1_change + '_NEW'
+                                rule = rhs_1_change + ' , ' + rhs_temp[1] + ' , ' + str(1)
                                 if rule not in rule_dict:
                                     rule_dict[rule] = True
                                     f.write(rule + '\n')
 
-                                new_rhs = rhs_upper_0 + rhs_upper_1
-                                rhs_temp[1] = rhs_upper_1
+                                rhs_temp[1] = rhs_1_change
 
-                        # Only the initial rule should have the original probability.
-                        if lhs_temp == lhs:
-                            rule = lhs_temp + ' , ' + new_rhs + ' , ' + str(prob)
-                        # Special case the situation where we only have two items
-                        # left, as we then do not want to create a new rule.
-                        elif len(rhs_temp) == 2:
-                            new_rhs = ' '.join(rhs_temp)
-                            rule = lhs_temp + ' , ' + new_rhs + ' , ' + str(1)
+                            rule = lhs_temp + ' , ' + ' '.join(rhs_temp) + ' , ' + str(1)
+                            f.write(rule + '\n')
+
                         else:
-                            rule = lhs_temp + ' , ' + new_rhs + ' , ' + str(1)
+                            new_rhs = rhs_temp[0] + ' X' + str(count)
 
-                        f.write(rule + '\n')
+                            if lhs_temp == lhs:
+                                rule = lhs_temp + ' , ' + new_rhs + ' , ' + str(prob)
+                            else:
+                                rule = lhs_temp + ' , ' + new_rhs + ' , ' + str(1)
+                            f.write(rule + '\n')
 
                         rhs_temp = rhs_temp[1:]
                         lhs_temp = 'X' + str(count)
                         count += 1
 
-                elif len(rhs_split) == 2:
-                    rhs_temp = rhs_split
-                    lhs_temp = lhs
+# TEST
+def main():
+	d = {}
+	d['A'] = {}
+	d['B'] = {}
+	d['A']['aa zz <br> aa <br> aa <br> bb <br> aa zz <br> aa <br> bb'] = 0.5
+	# d['B']['BB BB'] = 0.9
 
-                    if rhs_temp[0] != rhs_temp[0].upper():
-                        # rule = 'Y' + str(count_unit) + ' , ' + rhs_temp[0] + ' , ' + str(1)
-                        rhs_upper = re.sub(' ', '-', rhs_temp[0].upper()) + '_NEW'
-                        # new_rhs = 'Y' + str(count_unit) + ' X' + str(count)
-                        rule = rhs_upper + ' , ' + rhs_temp[0] + ' , ' + str(1)
-                        if rule not in rule_dict:
-                            rule_dict[rule] = True
-                            f.write(rule + '\n')
-                        rhs_temp[0] = rhs_upper
+	storeGrammar(d)
+	convertToCNF('cfg.txt')
 
+<<<<<<< HEAD
                     if rhs_temp[1] != rhs_temp[1].upper():
                         rhs_upper_1 = re.sub(' ', '-', rhs_temp[1].upper()) + '_NEW'
                         rule = rhs_upper_1 + ' , ' + rhs_temp[1] + ' , ' + str(1)
@@ -172,3 +176,7 @@ def convertToCNF(filename):
 
 #if __name__ == '__main__':
 #    main()
+=======
+if __name__ == '__main__':
+	main()
+>>>>>>> 0e63e0aafaa1bcf388e228dcd0e188fbad53634c
