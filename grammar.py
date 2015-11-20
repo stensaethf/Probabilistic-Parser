@@ -128,9 +128,9 @@ def convertToCNF(filename):
                                 rule = lhs_temp + ' , ' + new_rhs + ' , ' + str(1)
                             f.write(rule + '\n')
 
-                            rhs_temp = rhs_temp[1:]
-                            lhs_temp = 'X' + str(count)
-                            count += 1
+                        rhs_temp = rhs_temp[1:]
+                        lhs_temp = 'X' + str(count)
+                        count += 1
 
 
 
@@ -227,16 +227,16 @@ def convertToCNF(filename):
 #    cfg.close()
 #    f.close()
 
-# # TEST
-# def main():
-# 	d = {}
-# 	d['A'] = {}
-# 	d['B'] = {}
-# 	d['A']['aa zz <br> aa <br> aa <br> bb'] = 0.5
-# 	# d['B']['BB BB'] = 0.9
+# TEST
+def main():
+	d = {}
+	d['A'] = {}
+	d['B'] = {}
+	d['A']['aa zz <br> aa <br> aa <br> bb'] = 0.5
+	# d['B']['BB BB'] = 0.9
 
-# 	storeGrammar(d)
-# 	convertToCNF('cfg.txt')
+	storeGrammar(d)
+	convertToCNF('cfg.txt')
 
-# if __name__ == '__main__':
-# 	main()
+if __name__ == '__main__':
+	main()
