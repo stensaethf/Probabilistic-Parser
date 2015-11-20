@@ -106,7 +106,7 @@ def convertToCNF(filename):
                                 rhs_1_change = rhs_1_change.upper()
 
                             if rhs_temp[1] != rhs_1_change:
-                                rhs_0_change = rhs_1_change + '_NEW'
+                                rhs_1_change = rhs_1_change + '_NEW'
                                 rule = rhs_1_change + ' , ' + rhs_temp[1] + ' , ' + str(1)
                                 if rule not in rule_dict:
                                     rule_dict[rule] = True
