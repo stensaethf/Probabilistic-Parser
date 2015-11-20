@@ -25,8 +25,6 @@ def storeGrammar(prob_dict):
                 rule = lhs + ' , ' + rhs + ' , ' + str(prob_dict[lhs][rhs])
                 f.write(rule + '\n')
 
-#	f.close()
-
 def convertToCNF(filename):
     """
 	convertToCNF() takes a filename and converts the grammar to CNF.
@@ -55,7 +53,7 @@ def convertToCNF(filename):
                 rhs_temp = rhs_split
                 lhs_temp = lhs
 
-                if len(rhs_temp) <= 2:
+                if len(rhs_temp) <= 2: # aka length is 1 or 2.
                     rhs_0_change = re.sub(' ', '-', rhs_temp[0])
                     if rhs_0_change != rhs_0_change.upper():
                         rhs_0_change = rhs_0_change.upper()
@@ -76,7 +74,7 @@ def convertToCNF(filename):
                             rhs_1_change = rhs_1_change.upper()
 
                         if rhs_temp[1] != rhs_1_change:
-                            rhs_0_change = rhs_1_change + '_NEW'
+                            rhs_1_change = rhs_1_change + '_NEW'
                             rule = rhs_1_change + ' , ' + rhs_temp[1] + ' , ' + str(1)
                             if rule not in rule_dict:
                                 rule_dict[rule] = True
