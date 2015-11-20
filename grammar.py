@@ -102,8 +102,42 @@ def convertToCNF(filename):
 				rhs_temp = rhs_temp[1:]
 				lhs_temp = 'X' + str(count)
 				count += 1
+		elif len(rhs_split) == 2:
+			if rhs_temp[0] != rhs_temp[0].upper():
+				# rule = 'Y' + str(count_unit) + ' , ' + rhs_temp[0] + ' , ' + str(1)
+				rhs_upper = re.sub(' ', '-', rhs_temp[0].upper()) + '_NEW'
+				# new_rhs = 'Y' + str(count_unit) + ' X' + str(count)
+				rule = rhs_upper + ' , ' + rhs_temp[0] + ' , ' + str(1)
+				if rule not in rule_dict:
+					rule_dict[rule] = True
+					f.write(rule + '\n')
+				rhs_temp[0] = rhs_upper
+
+			if rhs_temp[1] != rhs_temp[1].upper():
+				rhs_upper_1 = re.sub(' ', '-', rhs_temp[1].upper()) + '_NEW'
+				rule = rhs_upper_1 + ' , ' + rhs_temp[1] + ' , ' + str(1)
+				if rule not in rule_dict:
+					rule_dict[rule] = True
+					f.write(rule + '\n')
+				rhs_temp[1] = rhs_upper_1
+
+			rule = lhs + ' , ' + ' '.join(rhs_temp) + ' , ' + str(prob)
+			f.write(rule + '\n')
+
 		else:
-			rule = lhs + ' , ' + rhs + ' , ' + str(prob)
+			rhs_temp = rhs_split
+			lhs_temp = lhs
+
+			if rhs_temp[0] != rhs_temp[0].upper():
+				# rule = 'Y' + str(count_unit) + ' , ' + rhs_temp[0] + ' , ' + str(1)
+				rhs_upper = re.sub(' ', '-', rhs_temp[0].upper()) + '_NEW'
+				# new_rhs = 'Y' + str(count_unit) + ' X' + str(count)
+				rule = rhs_upper + ' , ' + rhs_temp[0] + ' , ' + str(1)
+				if rule not in rule_dict:
+					rule_dict[rule] = True
+					f.write(rule + '\n')
+
+			rule = lhs + ' , ' + rhs_upper + ' , ' + str(prob)
 			f.write(rule + '\n')
 
 	cfg.close()
