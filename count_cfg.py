@@ -47,6 +47,7 @@ def main():
     grammar.convertToCNF('cfg.txt')
     
     g = grammar.read_grammar(open('cnf.txt', 'rb'))
+    print len(g.terminals)
     words = ['The', 'dog', 'jumps']
     parsed_trees = parse.parse(g, words)
     for tree in parsed_trees:

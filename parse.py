@@ -1,3 +1,5 @@
+from copy import copy
+
 class State:
     
     def __init__(self, production, pos, origin, end):
@@ -25,7 +27,7 @@ class State:
             s += '* '
         
         s += str(self.production.prob)
-        s += " ["+str(self.origin)+"] "
+        s += " ["+str(self.origin)+","+str(self.end)+"] "
             
         return s
     
@@ -41,21 +43,12 @@ class State:
         return hash(self_string)
     
     def increment(self, arg):
-        new_state = State(self.production, self.pos+1, self.origin)
+        new_state = State(self.production, self.pos+1, self.origin, self.end)
         new_state.completed = copy(self.completed)
         new_state.completed.append(arg)
         return new_state
     
-class Production:
-    
-    def __init__(self, head, body, prob):
-        self.head = head
-        self.body = body
-        self.prob = prob
-        
-    def __str__(self):
-        return self.head+' -> '+' '.join(self.body)+' '+str(self.prob)
-    
+
 class ParseNode:
     def __init__(self, val):
         self.children = list()
@@ -113,6 +106,7 @@ def parse(g, words):
             
             while(s[i]):
                 state = s[i].pop()
+                print state
                 
                 if state.incomplete():
                     if state.next_cat() in g.non_terminals:
@@ -128,7 +122,7 @@ def parse(g, words):
                 else:
                     s[i].extend(completer(state, i, s))
                 
-                curr.append(state)
+                curr.append(state)   
                     
             s[i] = curr
             if len(scanned):
@@ -142,7 +136,6 @@ def parse(g, words):
         return [ParseNode(x.completed[0]) for x in heads]
         
 def predictor(g, state, i):
-    print state
     predictions = set()
     head = state.next_cat()
     

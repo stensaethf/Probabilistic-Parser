@@ -11,6 +11,16 @@ Frederik Roenn Stensaeth, Phineas Callahan
 
 import re, string
 
+class Production:
+    
+    def __init__(self, head, body, prob):
+        self.head = head
+        self.body = body
+        self.prob = prob
+        
+    def __str__(self):
+        return self.head+' -> '+' '.join(self.body)+' '+str(self.prob)
+
 class Grammar:
     
     def __init__(self, E, N, R, S = 'TOP'):
@@ -18,6 +28,11 @@ class Grammar:
         self.non_terminals = N
         self.terminals = E
         self.start_symbol = S
+        
+        
+    def convertToCNF(self):
+        for lhs in self.rules.keys():
+            for rhs in self.
         
 def read_grammar(input_file):
     rules = {}
@@ -33,14 +48,12 @@ def read_grammar(input_file):
         else:
             rules[rule[0]] = entry
         
-        entry[rule[1]] = rule[-1]
+        entry[' '.join(rule[1:-1])] = rule[-1]
         
         non_terminals.add(rule[0])
-        if rule[1] == rule[1].upper():
-            non_terminals.update(rule[1].split())
-        else:
-            terminals.add(rule[1])
+        terminals.update(rule[1:-1])
         
+    terminals -= non_terminals
     return Grammar(terminals, non_terminals, rules)
 
 def storeGrammar(prob_dict):
@@ -85,7 +98,10 @@ def convertToCNF(filename):
                 rhs_temp = rhs_split
                 lhs_temp = lhs
 
-                if len(rhs_temp) <= 2: # aka length is 1 or 2.
+                if len(rhs_temp) == 1:
+                    # make sure it is terminal
+                    xx
+                elif len(rhs_temp) == 2: # aka length is 1 or 2.
                     rhs_0_change = re.sub(' ', '-', rhs_temp[0])
                     if rhs_0_change != rhs_0_change.upper():
                         rhs_0_change = rhs_0_change.upper()
@@ -100,21 +116,21 @@ def convertToCNF(filename):
                         rhs_temp[0] = rhs_0_change
 
 
-                    if len(rhs_temp) == 2:
-                        rhs_1_change = re.sub(' ', '-', rhs_temp[1])
-                        if rhs_1_change != rhs_1_change.upper():
-                            rhs_1_change = rhs_1_change.upper()
+#                    if len(rhs_temp) == 2:
+                    rhs_1_change = re.sub(' ', '-', rhs_temp[1])
+                    if rhs_1_change != rhs_1_change.upper():
+                        rhs_1_change = rhs_1_change.upper()
 
-                        if rhs_temp[1] != rhs_1_change:
-                            rhs_1_change = rhs_1_change + '_NEW'
-                            rule = rhs_1_change + ' | ' + rhs_temp[1] + ' | ' + str(1)
-                            if rule not in rule_dict:
-                                rule_dict[rule] = True
-                                f.write(rule + '\n')
+                    if rhs_temp[1] != rhs_1_change:
+                        rhs_1_change = rhs_1_change + '_NEW'
+                        rule = rhs_1_change + ' | ' + rhs_temp[1] + ' | ' + str(1)
+                        if rule not in rule_dict:
+                            rule_dict[rule] = True
+                            f.write(rule + '\n')
 
-                            rhs_temp[1] = rhs_1_change
+                        rhs_temp[1] = rhs_1_change
 
-                    rule = lhs_temp + ' | ' + ' '.join(rhs_temp) + ' | ' + str(prob)
+                    rule = lhs_temp + ' | ' + ' | '.join(rhs_temp) + ' | ' + str(prob)
                     f.write(rule + '\n')
                 else:
                     # > 2
@@ -146,11 +162,11 @@ def convertToCNF(filename):
 
                                 rhs_temp[1] = rhs_1_change
 
-                            rule = lhs_temp + ' | ' + ' '.join(rhs_temp) + ' | ' + str(1)
+                            rule = lhs_temp + ' | ' + ' | '.join(rhs_temp) + ' | ' + str(1)
                             f.write(rule + '\n')
 
                         else:
-                            new_rhs = rhs_temp[0] + ' X' + str(count)
+                            new_rhs = rhs_temp[0] + ' | X' + str(count)
 
                             if lhs_temp == lhs:
                                 rule = lhs_temp + ' | ' + new_rhs + ' | ' + str(prob)
