@@ -80,9 +80,9 @@ def main():
         
     probs = counts.getProbabilities(raw_counts)
     grammar.storeGrammar(probs)
+    grammar.convertToCNF('cfg.txt')
     
     grammar.read_grammar(open('cnf.txt', 'rb'))
-    grammar.convertToCNF('cfg.txt')
     
 if __name__=='__main__':
     main()

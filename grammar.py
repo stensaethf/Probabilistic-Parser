@@ -11,6 +11,24 @@ Frederik Roenn Stensaeth, Phineas Callahan
 
 import re, string
 
+class Grammar:
+    
+    def __init__(self, E, N, R, S = 'S'):
+        self.rules = R
+        self.non_terminals = N
+        self.terminals = E
+        self.start_symbol = S
+        
+def read_grammar(input_file):
+    rules = []
+    non_terminals = set()
+    terminals = set()
+    
+    for line in input_file:
+        rule = map(string.strip, line.split('|'))
+        rules.append(tuple(rule))
+        print tuple(rule)
+
 def storeGrammar(prob_dict):
     """
     storeGrammar() takes a probabilities dictionary and stores all the
@@ -22,7 +40,7 @@ def storeGrammar(prob_dict):
     with open('cfg.txt', 'w') as f:
         for lhs in prob_dict:
             for rhs in prob_dict[lhs]:
-                rule = lhs + ' , ' + rhs + ' , ' + str(prob_dict[lhs][rhs])
+                rule = lhs + ' | ' + rhs + ' | ' + str(prob_dict[lhs][rhs])
                 f.write(rule + '\n')
 
 def convertToCNF(filename):
@@ -40,9 +58,9 @@ def convertToCNF(filename):
             # count_unit = 1
             for line in cfg:
                 # LHS , RHS , PROB\n
-                info = re.sub('\n' , '', line)
+                info = line.strip()
                 # LHS , RHS , PROB
-                info = info.split(' , ')
+                info = info.split(' | ')
 
                 lhs = info[0]
                 rhs = info[1]
@@ -60,7 +78,7 @@ def convertToCNF(filename):
 
                     if rhs_temp[0] != rhs_0_change:
                         rhs_0_change = rhs_0_change + '_NEW'
-                        rule = rhs_0_change + ' , ' + rhs_temp[0] + ' , ' + str(1)
+                        rule = rhs_0_change + ' | ' + rhs_temp[0] + ' | ' + str(1)
                         if rule not in rule_dict:
                             rule_dict[rule] = True
                             f.write(rule + '\n')
@@ -75,14 +93,14 @@ def convertToCNF(filename):
 
                         if rhs_temp[1] != rhs_1_change:
                             rhs_1_change = rhs_1_change + '_NEW'
-                            rule = rhs_1_change + ' , ' + rhs_temp[1] + ' , ' + str(1)
+                            rule = rhs_1_change + ' | ' + rhs_temp[1] + ' | ' + str(1)
                             if rule not in rule_dict:
                                 rule_dict[rule] = True
                                 f.write(rule + '\n')
 
                             rhs_temp[1] = rhs_1_change
 
-                    rule = lhs_temp + ' , ' + ' '.join(rhs_temp) + ' , ' + str(prob)
+                    rule = lhs_temp + ' | ' + ' '.join(rhs_temp) + ' | ' + str(prob)
                     f.write(rule + '\n')
                 else:
                     # > 2
@@ -93,7 +111,7 @@ def convertToCNF(filename):
 
                         if rhs_temp[0] != rhs_0_change:
                             rhs_0_change = rhs_0_change + '_NEW'
-                            rule = rhs_0_change + ' , ' + rhs_temp[0] + ' , ' + str(1)
+                            rule = rhs_0_change + ' | ' + rhs_temp[0] + ' | ' + str(1)
                             if rule not in rule_dict:
                                 rule_dict[rule] = True
                                 f.write(rule + '\n')
@@ -107,23 +125,23 @@ def convertToCNF(filename):
 
                             if rhs_temp[1] != rhs_1_change:
                                 rhs_1_change = rhs_1_change + '_NEW'
-                                rule = rhs_1_change + ' , ' + rhs_temp[1] + ' , ' + str(1)
+                                rule = rhs_1_change + ' | ' + rhs_temp[1] + ' | ' + str(1)
                                 if rule not in rule_dict:
                                     rule_dict[rule] = True
                                     f.write(rule + '\n')
 
                                 rhs_temp[1] = rhs_1_change
 
-                            rule = lhs_temp + ' , ' + ' '.join(rhs_temp) + ' , ' + str(1)
+                            rule = lhs_temp + ' | ' + ' '.join(rhs_temp) + ' | ' + str(1)
                             f.write(rule + '\n')
 
                         else:
                             new_rhs = rhs_temp[0] + ' X' + str(count)
 
                             if lhs_temp == lhs:
-                                rule = lhs_temp + ' , ' + new_rhs + ' , ' + str(prob)
+                                rule = lhs_temp + ' | ' + new_rhs + ' | ' + str(prob)
                             else:
-                                rule = lhs_temp + ' , ' + new_rhs + ' , ' + str(1)
+                                rule = lhs_temp + ' | ' + new_rhs + ' | ' + str(1)
                             f.write(rule + '\n')
 
                         rhs_temp = rhs_temp[1:]
@@ -131,52 +149,16 @@ def convertToCNF(filename):
                         count += 1
 
 # TEST
-def main():
-	d = {}
-	d['A'] = {}
-	d['B'] = {}
-	d['A']['aa zz <br> aa <br> aa <br> bb <br> aa zz <br> aa <br> bb'] = 0.5
-	# d['B']['BB BB'] = 0.9
+#def main():
+#	d = {}
+#	d['A'] = {}
+#	d['B'] = {}
+#	d['A']['aa zz <br> aa <br> aa <br> bb <br> aa zz <br> aa <br> bb'] = 0.5
+#	# d['B']['BB BB'] = 0.9
+#
+#	storeGrammar(d)
+#	convertToCNF('cfg.txt')
 
-	storeGrammar(d)
-	convertToCNF('cfg.txt')
 
-<<<<<<< HEAD
-                    if rhs_temp[1] != rhs_temp[1].upper():
-                        rhs_upper_1 = re.sub(' ', '-', rhs_temp[1].upper()) + '_NEW'
-                        rule = rhs_upper_1 + ' , ' + rhs_temp[1] + ' , ' + str(1)
-                        if rule not in rule_dict:
-                            rule_dict[rule] = True
-                            f.write(rule + '\n')
-                        rhs_temp[1] = rhs_upper_1
-
-                    rule = lhs + ' , ' + ' '.join(rhs_temp) + ' , ' + str(prob)
-                    f.write(rule + '\n')
-
-                else:
-                    rhs_temp = rhs_split
-                    lhs_temp = lhs
-
-                    if rhs_temp[0] != rhs_temp[0].upper():
-                        # rule = 'Y' + str(count_unit) + ' , ' + rhs_temp[0] + ' , ' + str(1)
-                        rhs_upper = re.sub(' ', '-', rhs_temp[0].upper()) + '_NEW'
-                        # new_rhs = 'Y' + str(count_unit) + ' X' + str(count)
-                        rule = rhs_upper + ' , ' + rhs_temp[0] + ' , ' + str(1)
-                        if rule not in rule_dict:
-                            rule_dict[rule] = True
-                            f.write(rule + '\n')
-
-                    rule = lhs + ' , ' + rhs_upper + ' , ' + str(prob)
-                    f.write(rule + '\n')
-            
-#    cfg.close()
-#    f.close()
-
-#TEST
-
-#if __name__ == '__main__':
-#    main()
-=======
 if __name__ == '__main__':
 	main()
->>>>>>> 0e63e0aafaa1bcf388e228dcd0e188fbad53634c
