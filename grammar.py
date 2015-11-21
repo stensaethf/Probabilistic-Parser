@@ -11,29 +11,125 @@ Frederik Roenn Stensaeth, Phineas Callahan
 
 import re, string
 
-class Production:
+class Rule:
     
-    def __init__(self, head, body, prob):
-        self.head = head
-        self.body = body
-        self.prob = prob
+    def __init__(self, *vals, l = None, r = None, p = 0.0):
+        if len(vals):
+            self.lhs = l[0]
+            self.rhs = l[1:-1]
+            self.prob = l[-1]
+        else:
+            self.lhs = l
+            self.rhs = r
+            self.prob = p
         
     def __str__(self):
-        return self.head+' -> '+' '.join(self.body)+' '+str(self.prob)
+        return self.head+' | '+'| '.join(self.body)+'| '+str(self.prob)
 
 class Grammar:
     
-    def __init__(self, E, N, R, S = 'TOP'):
+    def __init__(self, *nodes, E = None, N = None, R = None, S = 'TOP'):
+        if len(nodes):
+            E, N, R = self.transform_nodes(nodes)
+            
+        
         self.rules = R
         self.non_terminals = N
         self.terminals = E
         self.start_symbol = S
-        
+        self.count = 0
         
     def convertToCNF(self):
-        for lhs in self.rules.keys():
-            for rhs in self.
+        for lhs_dict in self.rules.keys():
+            cnf_rules = []
+            while len(lhs_dict):
+                rule = lhs_dict.popitem()
+                cnf_rules.extend(self.cnf(rule))
+            
+            lhs_dict = cnf_rules
         
+        for lhs in self.rules.keys():
+            for key in self.rules[lhs]:
+                rule = lhs_dict[key]
+                if len(rule.rhs) == 1 and rule.rhs[0] not in self.terminals:
+                    del lhs_dict[key]
+                    for x in self.rules[rule.rhs[0]]]
+                        prob = x.prob*rule.prob
+                        new_rule = Rule(l = lhs,r = x.rhs,p = prob)
+                        lhs_dict[' '.join(x.rhs)] = new_rule
+                     
+                
+    def cnf(rule):
+        new_rules = []
+        body = rule.lhs
+        head = rule.rhs
+        
+        if len(body) >= 2:
+            for i, symbol in enumerate(body):
+                if symbol in self.terminals:
+                    new_rule = [self.new_symbol(),]
+                    new_rule.append(symbol)
+                    new_rule.append(1.0)
+                    new_rules.append(Rule(new_rule))
+                    
+                    body[i] = new_rule[0]
+        
+        while len(rhs)>2:
+            new_head = self.new_symbol()
+            new_rule = [head, rhs.pop(0), new_head, 1.0]
+            new_rules.append(Rule(new_rule))
+            head = new_head
+            
+        new_rule = [head,]
+        new_rule.extend(body)
+        new_rule.append(1.0)
+        
+        new_rules.append(Rule(new_rule))
+                
+        return new_rules
+                
+    def new_symbol():
+        while 'X'+str(self.count) in self.non_terminals:
+            self.count += 1
+                
+        return 'X'+str(self.count)
+    
+    def write(self, output_file):
+        for lhs in self.rules:
+            for rule in self.rules[lhs].keys():
+                output_file.write(rule)
+    
+    def transform_nodes(nodes):
+        count = {}
+        for node in nodes:
+            self.recursive_count(node, count)
+            
+        for lhs in count:
+            lhs_sum = sum(count[lhs].values)
+            for key,val in count[lhs].items():
+                count[lhs][key] = val/lhs_sum
+        
+        
+            
+    def recursive_count(node, count):
+        if len(node.children):
+            entry = {}
+            if node.value in count:
+                entry = count[node.value]
+            else:
+                count[node.value] = entry
+
+            children = [child.value for child in node.children]
+            child_string = '|'.join(children)
+            if child_string in entry:
+                entry[child_string] += 1.0
+            else:
+                entry[child_string] = 1.0
+                
+            for child in node.children:
+                recursive_count(child, count)
+    
+                
 def read_grammar(input_file):
     rules = {}
     non_terminals = set()
@@ -42,19 +138,19 @@ def read_grammar(input_file):
     for line in input_file:
         rule = map(string.strip, line.split('|'))
         
+        non_terminals.add(rule[0])
+        terminals.update(rule[1:-1])
+        
         entry = {}
         if rule[0] in rules:
             entry = rules[rule[0]]
         else:
             rules[rule[0]] = entry
         
-        entry[' '.join(rule[1:-1])] = rule[-1]
-        
-        non_terminals.add(rule[0])
-        terminals.update(rule[1:-1])
+        entry[' '.join(rule[1:-1])] = Rule(rule)
         
     terminals -= non_terminals
-    return Grammar(terminals, non_terminals, rules)
+    return Grammar(E = terminals, N = non_terminals, R = rules)
 
 def storeGrammar(prob_dict):
     """
@@ -70,113 +166,7 @@ def storeGrammar(prob_dict):
                 rule = lhs + ' | ' + rhs + ' | ' + str(prob_dict[lhs][rhs])
                 f.write(rule + '\n')
 
-def convertToCNF(filename):
-    """
-	convertToCNF() takes a filename and converts the grammar to CNF.
-	Result is stored in cnf.txt.
 
-	@params: grammar file.
-	@return: n/a.
-	"""
-    with open('cnf.txt', 'w') as f:
-        with open(filename, 'r') as cfg:
-            count = 1
-            rule_dict = {}
-            # count_unit = 1
-            for line in cfg:
-                # LHS , RHS , PROB\n
-                info = line.strip()
-                # LHS , RHS , PROB
-                info = info.split(' | ')
-
-                lhs = info[0]
-                rhs = info[1]
-                prob = info[2]
-
-                rhs_split = rhs.split(' <br> ')
-
-                rhs_temp = rhs_split
-                lhs_temp = lhs
-
-                if len(rhs_temp) == 1:
-                    # make sure it is terminal
-                    xx
-                elif len(rhs_temp) == 2: # aka length is 1 or 2.
-                    rhs_0_change = re.sub(' ', '-', rhs_temp[0])
-                    if rhs_0_change != rhs_0_change.upper():
-                        rhs_0_change = rhs_0_change.upper()
-
-                    if rhs_temp[0] != rhs_0_change:
-                        rhs_0_change = rhs_0_change + '_NEW'
-                        rule = rhs_0_change + ' | ' + rhs_temp[0] + ' | ' + str(1)
-                        if rule not in rule_dict:
-                            rule_dict[rule] = True
-                            f.write(rule + '\n')
-
-                        rhs_temp[0] = rhs_0_change
-
-
-#                    if len(rhs_temp) == 2:
-                    rhs_1_change = re.sub(' ', '-', rhs_temp[1])
-                    if rhs_1_change != rhs_1_change.upper():
-                        rhs_1_change = rhs_1_change.upper()
-
-                    if rhs_temp[1] != rhs_1_change:
-                        rhs_1_change = rhs_1_change + '_NEW'
-                        rule = rhs_1_change + ' | ' + rhs_temp[1] + ' | ' + str(1)
-                        if rule not in rule_dict:
-                            rule_dict[rule] = True
-                            f.write(rule + '\n')
-
-                        rhs_temp[1] = rhs_1_change
-
-                    rule = lhs_temp + ' | ' + ' | '.join(rhs_temp) + ' | ' + str(prob)
-                    f.write(rule + '\n')
-                else:
-                    # > 2
-                    while len(rhs_temp) > 1:
-                        rhs_0_change = re.sub(' ', '-', rhs_temp[0])
-                        if rhs_0_change != rhs_0_change.upper():
-                            rhs_0_change = rhs_0_change.upper()
-
-                        if rhs_temp[0] != rhs_0_change:
-                            rhs_0_change = rhs_0_change + '_NEW'
-                            rule = rhs_0_change + ' | ' + rhs_temp[0] + ' | ' + str(1)
-                            if rule not in rule_dict:
-                                rule_dict[rule] = True
-                                f.write(rule + '\n')
-
-                            rhs_temp[0] = rhs_0_change
-
-                        if len(rhs_temp) == 2:
-                            rhs_1_change = re.sub(' ', '-', rhs_temp[1])
-                            if rhs_1_change != rhs_1_change.upper():
-                                rhs_1_change = rhs_1_change.upper()
-
-                            if rhs_temp[1] != rhs_1_change:
-                                rhs_1_change = rhs_1_change + '_NEW'
-                                rule = rhs_1_change + ' | ' + rhs_temp[1] + ' | ' + str(1)
-                                if rule not in rule_dict:
-                                    rule_dict[rule] = True
-                                    f.write(rule + '\n')
-
-                                rhs_temp[1] = rhs_1_change
-
-                            rule = lhs_temp + ' | ' + ' | '.join(rhs_temp) + ' | ' + str(1)
-                            f.write(rule + '\n')
-
-                        else:
-                            new_rhs = rhs_temp[0] + ' | X' + str(count)
-
-                            if lhs_temp == lhs:
-                                rule = lhs_temp + ' | ' + new_rhs + ' | ' + str(prob)
-                            else:
-                                rule = lhs_temp + ' | ' + new_rhs + ' | ' + str(1)
-                            f.write(rule + '\n')
-
-                        rhs_temp = rhs_temp[1:]
-                        lhs_temp = 'X' + str(count)
-                        count += 1
 
 # TEST
 #def main():

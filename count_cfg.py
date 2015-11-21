@@ -38,15 +38,9 @@ def main():
         f = open(file_path, 'rb')
         trees.extend(read_trees(f))
     
-    raw_counts = {}
-    for tree in trees:
-        counts.getCounts(raw_counts, tree)
-        
-    probs = counts.getProbabilities(raw_counts)
-    grammar.storeGrammar(probs)
-    grammar.convertToCNF('cfg.txt')
+    g = grammar.Grammar(trees)
+    g = g.convertToCNF()
     
-    g = grammar.read_grammar(open('cnf.txt', 'rb'))
     print len(g.terminals)
     words = ['The', 'dog', 'jumps']
     parsed_trees = parse.parse(g, words)
