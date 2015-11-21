@@ -1,4 +1,5 @@
 import sys, os, types, counts, grammar, parse
+from collections import Counter
 
 def read_trees(f):
     tokens = []
@@ -25,11 +26,16 @@ def recursiveParse(tokens):
         else:
             node.append(parse.ParseNode(token))
         
+    if len(node.children)==1 and node.children[0].isLeaf():
+        print node
+        if node.value == node.children[0].value:
+            node.children = list()
     
     return node
         
 def main():
     trees = []
+    print 'Parsing trees'
     for path in os.listdir(sys.argv[1]):
         if path.split('.')[1] != 'prd':
             continue
@@ -38,17 +44,26 @@ def main():
         f = open(file_path, 'rb')
         trees.extend(read_trees(f))
     
-    g = grammar.Grammar(nodes = trees)
-    for lhs in g.rules:
-        for rhs in g.rules[lhs]:
-            print g.rules[lhs][rhs]
-    g = g.convertToCNF()
+#    for tree in trees:
+#        if '``' in tree:
+#            print tree
+        
+#    print 'Converting trees to grammar'
+#    g = grammar.Grammar(nodes = trees)
+#    g.write(open('cfg.txt', 'wb'))
+#    print 'Converting grammar to CNF'
+#    g.convertToCNF()
+##    for rule in g.NR['NAC'].values():
+##        print rule
+#    g.write(open('cnf.txt', 'wb'))
     
-    print len(g.terminals)
-    words = ['The', 'dog', 'jumps']
-    parsed_trees = parse.parse(g, words)
-    for tree in parsed_trees:
-        print tree
-    
+#    print 'Parsing Sentence'
+#    words = ['the', 'dog', 'showed']
+#    parsed_trees = parse.parse(g, words)
+#    print len(parsed_trees)
+#    for tree in parsed_trees:
+#        l=tree.__str__()
+#        print
+#    
 if __name__=='__main__':
     main()

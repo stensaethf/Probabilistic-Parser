@@ -1,23 +1,24 @@
+import grammar
 from copy import copy
 
 class State:
     
-    def __init__(self, production, pos, origin, end):
-        self.production = production
+    def __init__(self, rule, pos, origin, end):
+        self.rule = rule
         self.origin = origin
         self.pos = pos
         self.end = end
         self.completed = list()
         
     def incomplete(self):
-        return self.pos < len(self.production.body)
+        return self.pos < len(self.rule.rhs)
         
     def next_cat(self):
-        return self.production.body[self.pos]
+        return self.rule.rhs[self.pos]
 
     def __str__(self):
-        s  = self.production.head+" -> "
-        for i,symbol in enumerate(self.production.body):
+        s  = self.rule.lhs+" -> "
+        for i,symbol in enumerate(self.rule.rhs):
             if i == self.pos:
                 s += '*'
             
@@ -26,7 +27,7 @@ class State:
         if not self.incomplete():
             s += '* '
         
-        s += str(self.production.prob)
+        s += str(self.rule.prob)
         s += " ["+str(self.origin)+","+str(self.end)+"] "
             
         return s
@@ -39,11 +40,11 @@ class State:
     
     
     def __hash__(self):
-        self_string = str(self.production)+str(self.pos)+str(self.origin)
+        self_string = str(self.rule)+str(self.pos)+str(self.origin)+str(self.end)
         return hash(self_string)
     
     def increment(self, arg):
-        new_state = State(self.production, self.pos+1, self.origin, self.end)
+        new_state = State(self.rule, self.pos+1, self.origin, self.end)
         new_state.completed = copy(self.completed)
         new_state.completed.append(arg)
         return new_state
@@ -91,45 +92,65 @@ class ParseNode:
             else:
                 child_has = [x.__contains__(item) for x in self.children]
                 return any(child_has)
+            
+    def list_rules(self, rules):
+        if len(self.children):
+            rule = self.value+'|'
+            children = [child.value for child in self.children]
+            rule += '|'.join(children)
+            rules.append(rule)
+            for child in self.children:
+                child.list_rules(rules)
+                
+    def isLeaf(self):
+        return len(children)==0
 
 def parse(g, words):
         s = [list()]
-        top = State(Production('BETA',['TOP'], 1.0), 0, 0, 0)
+        top = State(grammar.Rule(vals = ['BETA', 'TOP', 1.0]), 0, 0, 0)
         s[0].append(top)
         
         for i in range(0, len(words)+1):
             if i==len(s):
                 return []
             
-            curr = list()
+            curr = set()
             scanned = list()
+            nt_scanned = set()
             
             while(s[i]):
                 state = s[i].pop()
-                print state
                 
                 if state.incomplete():
-                    if state.next_cat() in g.non_terminals:
-                        predictions = predictor(g, state, i)
-                        for p in predictions:
-                            if p not in curr and p not in s[i]:
-                                if not p.__eq__(state):
-                                    s[i].append(p)
-                    elif i<len(words) and state.next_cat() == words[i]:
-                        scan_state = state.increment(words[i])
-                        scan_state.end = i
-                        scanned.append(scan_state)
-                else:
-                    s[i].extend(completer(state, i, s))
-                
-                curr.append(state)   
+                    nsymbol = state.next_cat()
                     
-            s[i] = curr
+                    if nsymbol in g.non_terminals and nsymbol not in nt_scanned:
+                        predictions = predictor(g, state, i)
+                        nt_scanned.add(nsymbol)
+                        for p in predictions:
+                            if p not in curr and not p.__eq__(state):
+                                s[i].append(p)
+                                curr.add(p)
+                else:
+                    completed = completer(state, i, s)
+                    for c in completed:
+                        if c not in curr:
+                           s[i].append(c)
+                            
+                    curr.update(completed)  
+            
+            scanned = []
+            if i<len(words) and words[i] in g.TR:
+                for rule in g.TR[words[i]].values():
+                    scanned.append(State(rule, 1, i, i+1))
+                                         
             if len(scanned):
                 s.append(scanned)
+                    
+            s[i] = curr
         
         def isHead(state):
-            return state.production.head == 'TOP'
+            return state.rule.lhs == 'TOP'
         
         heads = filter(isHead, s[-1])
   
@@ -138,22 +159,16 @@ def parse(g, words):
 def predictor(g, state, i):
     predictions = set()
     head = state.next_cat()
+    if head in g.NR:
+        for r in g.NR[head].values():
+            predictions.add(State(r, 0, i, i))
     
-    for body,prob in g.rules[head].items():
-        if body == body.upper():
-            body = body.split()
-        else:
-            body = [body,]
-        
-        p = Production(head, body, prob)
-        predictions.add(State(p, 0, i, i))
-
     return predictions
     
 def completer(state, i, s):
     past_states = [ps for ps in s[state.origin] if ps.incomplete()]
     completed = list()
-    head = state.production.head
+    head = state.rule.lhs
     for p_state in past_states:
         if head == p_state.next_cat():
             x = p_state.increment(state)

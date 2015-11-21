@@ -13,11 +13,11 @@ import re, string
 
 class Rule:
     
-    def __init__(self, l = None, r = None, p = 0.0, *vals):
-        if len(vals):
-            self.lhs = l[0]
-            self.rhs = l[1:-1]
-            self.prob = l[-1]
+    def __init__(self, l = None, r = None, p = 0.0, vals = None):
+        if vals:
+            self.lhs = vals[0]
+            self.rhs = vals[1:-1]
+            self.prob = vals[-1]
         else:
             self.lhs = l
             self.rhs = r
@@ -31,73 +31,149 @@ class Grammar:
     def __init__(self, E = None, N = None, R = None, S = 'TOP', nodes = None):
         if len(nodes):
             E, N, R = self.transform_nodes(nodes)
-            
-        self.rules = R
+        
         self.non_terminals = N
         self.terminals = E
+        self.NR = {}
+        self.TR = {}
+        
+        for lhs in R:
+            while len(R[lhs]):
+                self.add_rule(R[lhs].popitem()[1])
+                
         self.start_symbol = S
         self.count = 0
         
     def convertToCNF(self):
-        for lhs_dict in self.rules.keys():
-            cnf_rules = []
-            print lhs_dict
-            while len(lhs_dict):
-                rule = lhs_dict.popitem()
-                cnf_rules.extend(self.cnf(rule))
-            
-            lhs_dict = cnf_rules
+        curr_rules = []
+        for lhs in self.NR:
+            curr_dict = self.NR[lhs]
+            while len(curr_dict):
+                curr_rules.append(curr_dict.popitem()[1])
+        for rhs in self.TR:
+            curr_dict = self.TR[rhs]
+            while len(curr_dict):
+                curr_rules.append(curr_dict.popitem()[1])
         
-        for lhs in self.rules.keys():
-            for key in self.rules[lhs]:
-                rule = lhs_dict[key]
-                if len(rule.rhs) == 1 and rule.rhs[0] not in self.terminals:
-                    del lhs_dict[key]
-                    for x in self.rules[rule.rhs[0]]:
-                        prob = x.prob*rule.prob
-                        new_rule = Rule(l = lhs,r = x.rhs,p = prob)
-                        lhs_dict[' '.join(x.rhs)] = new_rule
-                     
-                
-    def cnf(self, rule):
+        curr_rules = self.TERM(curr_rules)
+        curr_rules = self.BIN(curr_rules)
+        curr_rules = self.UNIT(curr_rules)
+        
+        for rule in curr_rules:
+            if rule.lhs == 'NAC':
+                print rule
+            self.add_rule(rule)
+        
+        
+    def UNIT(self, rules):
         new_rules = []
-        body = rule.lhs
-        head = rule.rhs
+        rule_lookup = { x.lhs : { '|'.join(x.rhs): x} for x in rules}
+        processed = set()
         
-        if len(body) >= 2:
-            for i, symbol in enumerate(body):
-                if symbol in self.terminals:
-                    new_rule = [self.new_symbol(),]
-                    new_rule.append(symbol)
-                    new_rule.append(1.0)
-                    new_rules.append(Rule(new_rule))
-                    
-                    body[i] = new_rule[0]
-        
-        while len(rhs)>2:
-            new_head = self.new_symbol()
-            new_rule = [head, rhs.pop(0), new_head, 1.0]
-            new_rules.append(Rule(new_rule))
-            head = new_head
-            
-        new_rule = [head,]
-        new_rule.extend(body)
-        new_rule.append(1.0)
-        
-        new_rules.append(Rule(new_rule))
+        while len(rules):
+            rule = rules.pop()
+            print rule
+            if self.isUnit(rule):
+                processed.add(rule)
+                for x in rule_lookup[rule.rhs[0]].values():
+                    prob = x.prob*rule.prob
+                    new_rule = Rule(l = rule.lhs,r = x.rhs,p = prob)
+                    if not self.isUnit(new_rule):
+                        new_rules.append(new_rule)
+                    elif new_rule not in processed:
+                        rules.append(new_rule)
+                        
+            else:
+                new_rules.append(rule)
                 
         return new_rules
+                     
                 
+    def TERM(self, rules):
+        new_rules = []
+        
+        while(len(rules)):
+            rule = rules.pop()
+            body = rule.rhs
+            head = rule.lhs
+            
+            if len(body) >= 2:
+                for i, symbol in enumerate(body):
+                    if symbol in self.terminals:
+                        new_rule = [self.new_symbol(),]
+                        new_rule.append(symbol)
+                        new_rule.append(1.0)
+                        new_rules.append(Rule(vals = new_rule))
+                    
+                        body[i] = new_rule[0]
+            
+            new_rules.append(rule)
+        return new_rules
+    
+    def BIN(self, rules):
+        new_rules = []
+        
+        while(len(rules)):
+            rule = rules.pop()
+            body = rule.rhs
+            head = rule.lhs
+            
+            if len(body) > 2:
+                prev = body.pop()
+                while len(body) >= 2:
+                    new_head = self.new_symbol()
+                    new_rule = [new_head, body.pop(), prev, 1.0]
+                    new_rules.append(Rule(vals = new_rule))
+                    prev = new_head
+            
+                new_rule = [head, body[0], prev, rule.prob]
+                new_rules.append(Rule(vals = new_rule))
+            else:
+                new_rules.append(rule)
+                
+        return new_rules    
+        
+    def isUnit(self, rule):
+        return len(rule.rhs) == 1 and rule.rhs[0] not in self.terminals
+    
     def new_symbol(self):
         while 'X'+str(self.count) in self.non_terminals:
             self.count += 1
                 
         return 'X'+str(self.count)
     
+    def add_rule(self, rule):
+        entry = {}
+        if len(rule.rhs) == 1 and rule.rhs[0] in self.terminals:
+            terminal = rule.rhs[0]
+            if rule.rhs[0] in self.TR:
+                entry = self.TR[terminal]
+            else:
+                self.TR[terminal] = entry
+                
+            entry[rule.lhs] = rule
+        else:
+            if rule.lhs in self.NR:
+                entry = self.NR[rule.lhs]
+            else:
+                self.NR[rule.lhs] = entry
+        
+            key = '|'.join(rule.rhs)
+            entry[key] = rule
+    
     def write(self, output_file):
-        for lhs in self.rules:
-            for rule in self.rules[lhs].keys():
-                output_file.write(rule)
+        for lhs in self.NR:
+            for rule in self.NR[lhs].values():
+                rule_str = rule.lhs+'|'+'|'.join(rule.rhs)+'|'+str(rule.prob)
+                output_file.write(str(rule)+'\n')
+                
+        output_file.write('\n')
+        for lhs in self.TR:
+            for rule in self.TR[lhs].values():
+                rule_str = rule.lhs+'|'+'|'.join(rule.rhs)+'|'+str(rule.prob)
+                output_file.write(str(rule)+'\n')
+        
+        output_file.close()
     
     def transform_nodes(self, nodes):
         non_terminals = set()
@@ -184,7 +260,7 @@ def storeGrammar(prob_dict):
     with open('cfg.txt', 'w') as f:
         for lhs in prob_dict:
             for rhs in prob_dict[lhs]:
-                rule = lhs + ' | ' + rhs + ' | ' + str(prob_dict[lhs][rhs])
+                rule = lhs + '|' + rhs + '|' + str(prob_dict[lhs][rhs])
                 f.write(rule + '\n')
 
 
