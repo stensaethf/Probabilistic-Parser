@@ -13,7 +13,7 @@ import re, string
 
 class Rule:
     
-    def __init__(self, *vals, l = None, r = None, p = 0.0):
+    def __init__(self, l = None, r = None, p = 0.0, *vals):
         if len(vals):
             self.lhs = l[0]
             self.rhs = l[1:-1]
@@ -24,15 +24,14 @@ class Rule:
             self.prob = p
         
     def __str__(self):
-        return self.head+' | '+'| '.join(self.body)+'| '+str(self.prob)
+        return self.lhs+' -> '+'|'.join(self.rhs)+' '+str(self.prob)
 
 class Grammar:
     
-    def __init__(self, *nodes, E = None, N = None, R = None, S = 'TOP'):
+    def __init__(self, E = None, N = None, R = None, S = 'TOP', nodes = None):
         if len(nodes):
             E, N, R = self.transform_nodes(nodes)
             
-        
         self.rules = R
         self.non_terminals = N
         self.terminals = E
@@ -42,6 +41,7 @@ class Grammar:
     def convertToCNF(self):
         for lhs_dict in self.rules.keys():
             cnf_rules = []
+            print lhs_dict
             while len(lhs_dict):
                 rule = lhs_dict.popitem()
                 cnf_rules.extend(self.cnf(rule))
@@ -53,13 +53,13 @@ class Grammar:
                 rule = lhs_dict[key]
                 if len(rule.rhs) == 1 and rule.rhs[0] not in self.terminals:
                     del lhs_dict[key]
-                    for x in self.rules[rule.rhs[0]]]
+                    for x in self.rules[rule.rhs[0]]:
                         prob = x.prob*rule.prob
                         new_rule = Rule(l = lhs,r = x.rhs,p = prob)
                         lhs_dict[' '.join(x.rhs)] = new_rule
                      
                 
-    def cnf(rule):
+    def cnf(self, rule):
         new_rules = []
         body = rule.lhs
         head = rule.rhs
@@ -88,7 +88,7 @@ class Grammar:
                 
         return new_rules
                 
-    def new_symbol():
+    def new_symbol(self):
         while 'X'+str(self.count) in self.non_terminals:
             self.count += 1
                 
@@ -99,19 +99,40 @@ class Grammar:
             for rule in self.rules[lhs].keys():
                 output_file.write(rule)
     
-    def transform_nodes(nodes):
+    def transform_nodes(self, nodes):
+        non_terminals = set()
+        terminals = set()
+        rules = {}
+        
         count = {}
         for node in nodes:
             self.recursive_count(node, count)
             
         for lhs in count:
-            lhs_sum = sum(count[lhs].values)
+            lhs_sum = sum(count[lhs].values())
             for key,val in count[lhs].items():
                 count[lhs][key] = val/lhs_sum
         
+        for lhs in count:
+            for rhs in count[lhs]:
+                prob = count[lhs][rhs]
+                body = map(string.strip, rhs.split('|'))
+                
+                terminals.update(body)
+                non_terminals.add(lhs)
+                
+                entry = {}
+                if lhs in rules:
+                    entry = rules[lhs]
+                else:
+                    rules[lhs] = entry
         
+                entry[rhs] = Rule(l = lhs, r = body, p = prob)
+        
+        terminals -= non_terminals
+        return terminals, non_terminals, rules
             
-    def recursive_count(node, count):
+    def recursive_count(self, node, count):
         if len(node.children):
             entry = {}
             if node.value in count:
@@ -127,7 +148,7 @@ class Grammar:
                 entry[child_string] = 1.0
                 
             for child in node.children:
-                recursive_count(child, count)
+                self.recursive_count(child, count)
     
                 
 def read_grammar(input_file):

@@ -38,7 +38,10 @@ def main():
         f = open(file_path, 'rb')
         trees.extend(read_trees(f))
     
-    g = grammar.Grammar(trees)
+    g = grammar.Grammar(nodes = trees)
+    for lhs in g.rules:
+        for rhs in g.rules[lhs]:
+            print g.rules[lhs][rhs]
     g = g.convertToCNF()
     
     print len(g.terminals)
