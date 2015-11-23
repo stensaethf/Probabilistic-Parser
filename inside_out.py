@@ -215,6 +215,7 @@ def main():
             if tree.root == 'TOP':
                 nodes_back_top.append(tree)
 
+        print 'Getting best and worst tree...'
         if nodes_back_top == []:
             print('No tree could be constructed for the sentence.')
             sys.exit()
