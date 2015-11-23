@@ -207,9 +207,9 @@ class Grammar:
         output_file.close()
     
     def transform_nodes(self, nodes):
-        non_terminals = set()
-        terminals = set()
-        rules = {}
+        # non_terminals = set()
+        # terminals = set()
+        # rules = {}
         
         count = {}
         for node in nodes:

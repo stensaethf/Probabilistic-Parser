@@ -51,13 +51,16 @@ def cky(grammar, sentence):
 				# print(g.TR['He']['NP'])
 
 				for rule in grammar.TR[terminal].values():
-					table[j - 1][j].append(rule.lhs)
-					start = j - 1
-					end = j - 1
-					# print(rule)
-					prob = math.log(rule.prob)
-					nodes_back[j - 1][j].append(
-						Node(rule.lhs, None, None, sentence[j - 1], start, end, prob))
+						table[j - 1][j].append(rule.lhs)
+						start = j - 1
+						end = j - 1
+						# print(rule)
+						if rule.prob != 0:
+							prob = rule.prob
+						else:
+							prob = 0
+						nodes_back[j - 1][j].append(
+							Node(rule.lhs, None, None, sentence[j - 1], start, end, prob))
 		# print(table)
 		# sys.exit()
 		# Loop over diagonally in the table and fill in the fields using
@@ -87,16 +90,19 @@ def cky(grammar, sentence):
 							# print(B in table[i][k])
 							# print(C in table[k][j])
 							if B in table[i][k] and C in table[k][j]:
+								# if rule.prob != 0:
 								table[i][j].append(lhs)
-								# print('yeeyeyeyeyeyeyeeyeyey')
-
+							# printnt('yeeyeyeyeyeyeyeeyeyey')
 								for b in nodes_back[i][k]:
 									for c in nodes_back[k][j]:
 										if b.root == B and \
 										   c.root == C:
 										   	start = b.start
 											end = c.end
-											prob = b.prob + c.prob + math.log(rule.prob)
+											if rule.prob != 0:
+												prob = b.prob * c.prob * rule.prob
+											else:
+												prob = 0
 											nodes_back[i][j].append(
 												Node(lhs, b, c, None, start, end, prob))
 	# print(table[0][n])

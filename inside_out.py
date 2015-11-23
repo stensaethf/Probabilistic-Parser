@@ -9,235 +9,267 @@ Frederik Roenn Stensaeth, Phineas Callahan
 import count_cfg
 from math import log
 import parse, cky, grammar, os, sys
+import os.path
+import pickle
 
 def potential(tree, grammar):
-	"""
-	potential() xx
+    """
+    potential() xx
 
-	@params: xx
-	@return: xx
-	"""
-	pot = 0
+    @params: xx
+    @return: xx
+    """
+    pot = 0
 
-	if tree.status:
-		# Potential of a leaf is 0 (log scale).
-		return pot
-	else:
-		left = tree.left
-		right = tree.right
+    if tree.status:
+        # Potential of a leaf is 0 (log scale).
+        return pot
+    else:
+        left = tree.left
+        right = tree.right
 
-		pot += potential(left, grammar)
-		pot += potential(right, grammar)
+        pot += potential(left, grammar)
+        pot += potential(right, grammar)
 
-		prob = 1
-		# Probability of root going to its children.
+        prob = 0
+        # Probability of root going to its children.
 
-		# check = False
-		for rule in grammar.NR[tree.root].values():
-			derivation = rule.rhs
-			if len(derivation) == 2:
-				B = derivation[0]
-				C = derivation[1]
-				if B == left.root and C == right.root:
-					prob = rule.prob
-					# check = True
-		# child_list = []
-		# for child in root.children:
-		#   child_list.append(child.value)
-		#   potential += potential(child, grammar)
+        # check = False
+        for rule in grammar.NR[tree.root].values():
+            derivation = rule.rhs
+            if len(derivation) == 2:
+                B = derivation[0]
+                C = derivation[1]
+                if B == left.root and C == right.root:
+                    prob = rule.prob
+                    # check = True
+        # child_list = []
+        # for child in root.children:
+        #   child_list.append(child.value)
+        #   potential += potential(child, grammar)
 
-		# prob = grammar.rules[root.value][' '.join(child_list)]
-		# print(check)
-		pot += log(prob)
+        # prob = grammar.rules[root.value][' '.join(child_list)]
+        # print(check)
+        pot *= prob
 
-	return pot
+    return pot
 
 def getAlpha(sentence, grammar, trees):
-	"""
-	calculateInsideProbabilities() xx
+    """
+    calculateInsideProbabilities() xx
 
-	@params: xx
-	@return: xx
-	"""
-	n = len(sentence)
-	
-	alpha = {lhs: [[0]*n]*n for lhs in grammar.non_terminals}
-	
-	#BASE CASE
-	for lhs in grammar.non_terminals:
-		for i in range(n):
-			word = sentence[i]
-			if word in grammar.TR and lhs in grammar.TR[word]:
-				alpha[lhs][i][i] = grammar.TR[word][lhs].prob
-			else:
-				alpha[lhs][i][i] = 0
-	
-	for lhs in grammar.NR:
-		for rule in grammar.NR[lhs].values():
-			for i in range(n - 1):
-				for j in range(i, n):
-					for k in range(i, j):
-						prod = 1
-						prod *= rule.prob
-						prod *= alpha[rule.rhs[0]][i][k]
-						prod *= alpha[rule.rhs[1]][k+1][j]
-						alpha[lhs][i][j] += prod
+    @params: xx
+    @return: xx
+    """
+    n = len(sentence)
+    
+    alpha = {lhs: [[0]*n]*n for lhs in grammar.non_terminals}
+    
+    #BASE CASE
+    for lhs in grammar.non_terminals:
+        for i in range(n):
+            word = sentence[i]
+            if word in grammar.TR and lhs in grammar.TR[word]:
+                alpha[lhs][i][i] = grammar.TR[word][lhs].prob
+            else:
+                alpha[lhs][i][i] = 0
+    
+    for lhs in grammar.NR:
+        for rule in grammar.NR[lhs].values():
+            for i in range(n - 1):
+                for j in range(i, n):
+                    for k in range(i, j):
+                        prod = 1
+                        prod *= rule.prob
+                        prod *= alpha[rule.rhs[0]][i][k]
+                        prod *= alpha[rule.rhs[1]][k+1][j]
+                        alpha[lhs][i][j] += prod
 
-	return alpha
+    return alpha
 
 def getBeta(sentence, grammar, trees, alpha):
-	n = len(sentence)
-	beta = {lhs: [[0]*n]*n for lhs in grammar.non_terminals}
-	
-	# print(grammar.start_symbol)
+    n = len(sentence)
+    beta = {lhs: [[0]*n]*n for lhs in grammar.non_terminals}
+    
+    # print(grammar.start_symbol)
 
-	beta[grammar.start_symbol][0][n-1] = 1
-	
-	for lhs in grammar.NR:
-		for rule in grammar.NR[lhs].values():
-			rrhs = '|'.join(rule.rhs[::-1])
-			if rrhs not in grammar.NR[lhs]:
-				continue
-			
-			r_rule = grammar.NR[lhs][rrhs]
-			
-			for i in range(n-1):
-				for j in range(1, n):
-					if i==0 and j==(n-1):
-						continue
-						
-					for k in range(i):
-						prod = 1
-						prod *= rule.prob
-						prod *= alpha[rule.rhs[0]][k][i-1]
-						prod *= beta[lhs][k][j]
-						beta[rule.rhs[1]][i][j] += prod
-						
-					for k in range(j+1, n):
-						prod = 1
-						prod *= r_rule.prob
-						prod *= alpha[rule.rhs[0]][i][k]
-						prod *= beta[lhs][i][k]
-						beta[rule.rhs[1]][i][j] += prod
-						
-	return beta
-	
+    beta[grammar.start_symbol][0][n-1] = 1
+    
+    for lhs in grammar.NR:
+        for rule in grammar.NR[lhs].values():
+            rrhs = '|'.join(rule.rhs[::-1])
+            if rrhs not in grammar.NR[lhs]:
+                continue
+            
+            r_rule = grammar.NR[lhs][rrhs]
+            
+            for i in range(n-1):
+                for j in range(1, n):
+                    if i==0 and j==(n-1):
+                        continue
+                        
+                    for k in range(i):
+                        prod = 1
+                        prod *= rule.prob
+                        prod *= alpha[rule.rhs[0]][k][i-1]
+                        prod *= beta[lhs][k][j]
+                        beta[rule.rhs[1]][i][j] += prod
+                        
+                    for k in range(j+1, n):
+                        prod = 1
+                        prod *= r_rule.prob
+                        prod *= alpha[rule.rhs[0]][i][k]
+                        prod *= beta[lhs][i][k]
+                        beta[rule.rhs[1]][i][j] += prod
+                        
+    return beta
+    
 def insideOutside(sentence, grammar, count):
-	"""
-	insideOutside() xx
+    """
+    insideOutside() xx
 
-	@params: xx
-	@return: xx
-	"""
-	n = len(sentence)
-	
-	print 'Parsing'
-	trees = cky.cky(grammar, sentence)
-	trees_top = []
-	for tree in trees:
-		if tree.root == 'TOP':
-			trees_top.append(tree)
+    @params: xx
+    @return: xx
+    """
+    n = len(sentence)
+    
+    trees = cky.cky(grammar, sentence)
+    trees_top = []
+    for tree in trees:
+        if tree.root == 'TOP':
+            trees_top.append(tree)
 
-	cky.printParseTrees(trees_top)
-	print 'Inside'
-	inside = getAlpha(sentence, grammar, trees_top)
-	# print(inside)
-	print 'Outside'
-	outside = getBeta(sentence, grammar, trees_top, inside)
-	
-	Z = inside[grammar.start_symbol][0][n-1]
-	mu = {lhs:[[0]*n]*n for lhs in inside}
-	
-	for lhs in mu:
-		for i in range(n):
-			for j in range(n):
-				mu[lhs][i][j] = inside[lhs][i][j]*outside[lhs][i][j]
-	
-	gamma = {}
-	for lhs in grammar.NR:
-		for rule in grammar.NR[lhs].values():
-			gamma[rule] = [[[0]*n]*n]*n
-			for i in range(n-1):
-				for j in range(i+1, n):
-					for k in range(i,j):
-						gamma[rule][i][k][j] = outside[rule.lhs][i][j]*rule.prob*inside[rule.rhs[0]][i][k]*inside[rule.rhs[1]][k+1][j]
-	
-	for lhs in grammar.NR:
-		if lhs not in count:
-			count[lhs] = {}
-		for rule in grammar.NR[lhs].values():
-			if tuple(rule.rhs) not in count[lhs]:
-				count[lhs][tuple(rule.rhs)] = 0
-			for i in range(n-1):
-				for j in range(i+1, n):
-					for k in range(i, j):
-						count[lhs][tuple(rule.rhs)] += gamma[rule][i][k][j]/Z
-	
-	for term in grammar.TR:
-		for lhs in grammar.TR[term]:
+    # cky.printParseTrees(trees_top)
+    inside = getAlpha(sentence, grammar, trees_top)
+    # print(inside)
+    outside = getBeta(sentence, grammar, trees_top, inside)
+    
+    Z = inside[grammar.start_symbol][0][n-1]
+    mu = {lhs:[[0]*n]*n for lhs in inside}
+    
+    for lhs in mu:
+        for i in range(n):
+            for j in range(n):
+                mu[lhs][i][j] = inside[lhs][i][j]*outside[lhs][i][j]
+    
+    gamma = {}
+    for lhs in grammar.NR:
+        for rule in grammar.NR[lhs].values():
+            gamma[rule] = [[[0]*n]*n]*n
+            for i in range(n-1):
+                for j in range(i+1, n):
+                    for k in range(i,j):
+                        gamma[rule][i][k][j] = outside[rule.lhs][i][j]*rule.prob*inside[rule.rhs[0]][i][k]*inside[rule.rhs[1]][k+1][j]
+    
+    for lhs in grammar.NR:
+        if lhs not in count:
+            count[lhs] = {}
+        for rule in grammar.NR[lhs].values():
+            if tuple(rule.rhs) not in count[lhs]:
+                count[lhs][tuple(rule.rhs)] = 0
+            for i in range(n-1):
+                for j in range(i+1, n):
+                    for k in range(i, j):
+                        count[lhs][tuple(rule.rhs)] += gamma[rule][i][k][j]/Z
+    
+    for term in grammar.TR:
+        for lhs in grammar.TR[term]:
             if lhs not in count:
                 count[lhs] = {}
             
             
     for i in range(n):
         for lhs in grammar.TR[sentence[i]]:
-            if tuple(sentence[i]) in count[lhs]:
-                count[lhs][tuple(sentence[i])] += mu[lhs][i][i]/Z
+            if tuple([sentence[i]]) in count[lhs]:
+                count[lhs][tuple([sentence[i]])] += mu[lhs][i][i]/Z
             else:
-                count[lhs][tuple(sentence[i])] = mu[lhs][i][i]/Z
-				
-	# values = count.values()
-	# for value in values:
-	# 	if value != 0 and value != 0.0:
-	# 		print value
+                count[lhs][tuple([sentence[i]])] = mu[lhs][i][i]/Z
+                
+    # values = count.values()
+    # for value in values:
+    #   if value != 0 and value != 0.0:
+    #       print value
 
-	
-	
-def main():
-	trees = []
-	print 'Parsing trees'
-	for path in os.listdir(sys.argv[1]):
-		if path.split('.')[1] != 'prd':
-			continue
-			
-		file_path = sys.argv[1]+'/'+path
-		f = open(file_path, 'rb')
-		trees.extend(count_cfg.read_trees(f))
-
-	print 'Converting trees to grammar'
-	g = grammar.Grammar(nodes = trees)
-	
-	g.write(open('cfg', 'wb'))
-	print 'Converting to CNF'
-	g.convertToCNF()
-	
-	
-	print 'Parsing Sentence'
-	sentences = [['His', 'tall', 'frame'], 
-				 ['the', 'dog', 'saved'], 
-				 ['discover', 'the', 'first', 'snail'],
-				 ['it', 'is', 'juxtaposed', 'well'],
-				 ['Her', 'handling', 'of', 'paint'],
-				 ['He', 'glowered', 'down', 'at', 'her']]
-	words = ['He', 'glowered', 'down', 'at', 'her']
-
-	count = {}
-	for sent in sentences:
-		insideOutside(sent, g, count)      
-        
-    for lhs in count:
-        lhs_sum = sum(count[lhs].values())
-        for key,val in count[lhs]:
-            count[lhs][key] = val/lhs_sum
     
-    for lhs in count:
-        for key,val in count[lhs]:
-            rule_dat = [lhs,]
-            rule_dat.extend(list(val))
-            rule_dat.append(val)
-            grammar.add_rule(grammar.Rule(rule_dat))
+    
+def main():
+    if os.path.isfile('grammar.p'):
+        print('yeyeyeeye')
+        g = pickle.load(open('grammar.p', 'rb'))
+
+    else:
+        print('nonnononnono')
+        trees = []
+        print 'Parsing trees'
+        for path in os.listdir(sys.argv[1]):
+            if path.split('.')[1] != 'prd':
+                continue
+                
+            file_path = sys.argv[1]+'/'+path
+            f = open(file_path, 'rb')
+            trees.extend(count_cfg.read_trees(f))
+
+        print 'Converting trees to grammar'
+        g = grammar.Grammar(nodes = trees)
+
+        print 'Converting to CNF'
+        g.convertToCNF()
+
+        pickle.dump(g, open('grammar.p', 'wb'))
+    
+
+    # x = 'In a different way the Equal Opportunities Commission and the Commission for Racial Equality are empowered by the Sex Discrimination Act 1975 and the Race Relations Act 1976'
+    print 'Parsing Sentence'
+    sentences = [['His', 'tall', 'frame'], 
+                 ['the', 'dog', 'saved'], 
+                 ['discover', 'the', 'first', 'snail'],
+                 ['it', 'is', 'juxtaposed', 'well'],
+                 ['Her', 'handling', 'of', 'paint'],
+                 ['He', 'glowered', 'down', 'at', 'her']]
+
+    # sentences.append(x.split())
+
+    for t in range(5):
+        num_t = [len(g.TR[lhs]) for lhs in g.TR]
+        num_n = [len(g.NR[lhs]) for lhs in g.NR]
+
+        print sum(num_t), sum(num_n)
+        to_del = []
+        count = {}
+        for sent in sentences:
+            insideOutside(sent, g, count)      
+        
+        for lhs in count:
+            lhs_sum = sum(count[lhs].values())
+            if lhs_sum == 0:
+                to_del.append(lhs)
+            else:
+                for key,val in count[lhs].items():
+                    count[lhs][key] = val/lhs_sum
+
+        for lhs in to_del:
+            del count[lhs]
+        
+        for lhs in count:
+            for key,val in count[lhs].items():
+                rule_dat = [lhs,]
+                rule_dat.extend(list(key))
+                rule_dat.append(val)
+                g.add_rule(grammar.Rule(vals = rule_dat))
+
+    def isTop(node):
+       return node.root == 'TOP'
+
+    for s in sentences:
+        nodes_back = cky.cky(g, s)
+        node_back = filter(isTop, nodes_back)
+        node_back = [(node, potential(node, g)) for node in node_back]
+        node_back.sort(key=lambda node: -1*node[1])
+        cky.printParseTrees([node_back[0][0]])
+        # cky.getParseTree(node_back[0][0], 5)
+
 
 
 
 if __name__=='__main__':
-	main()
+    main()
