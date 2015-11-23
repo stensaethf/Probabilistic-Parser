@@ -60,6 +60,7 @@ def main():
     
     print 'Parsing Sentence'
     words = ['He', 'glowered', 'down', 'at', 'her']
+    inside_out.insideOutside(words, g)
 
     #  (TOP (S (NP (PRP He)) (VP (VBD glowered) (ADVP (RP down)) 
     # (PP (IN at) (NP (PRP her))))))
@@ -67,8 +68,8 @@ def main():
     # pickle.dump(g, open('grammar.p', 'wb'))
     # g = pickle.load(open('grammar.p', 'rb'))
 
-    nodes_back = cky.cky(g, words)
-    print 'Parsed'
+#    nodes_back = cky.cky(g, words)
+#    print 'Parsed'
     # best_pot = 0
     # best_tree = None
     # for node in nodes_back:
@@ -84,17 +85,17 @@ def main():
     #             best_pot = pot
     #             best_tree = node
 
-    def isTop(node):
-        return node.root == 'TOP'
-
-    print(len(nodes_back))
-    node_back = filter(isTop, nodes_back)
-    print(len(node_back))
-    node_back = [(node, inside_out.potential(node, g)) for node in node_back]
-    node_back.sort(key=lambda node: -1*node[1])
-    print(cky.getParseTree(node_back[1][0], 5))
-    print(cky.getParseTree(node_back[2][0], 5))
-    print(cky.getParseTree(node_back[3][0], 5))
+#    def isTop(node):
+#        return node.root == 'TOP'
+#
+#    print(len(nodes_back))
+#    node_back = filter(isTop, nodes_back)
+#    print(len(node_back))
+#    node_back = [(node, inside_out.potential(node, g)) for node in node_back]
+#    node_back.sort(key=lambda node: -1*node[1])
+#    print(cky.getParseTree(node_back[1][0], 5))
+#    print(cky.getParseTree(node_back[2][0], 5))
+#    print(cky.getParseTree(node_back[3][0], 5))
 
     # print(cky.getParseTree(best_tree, 5))
 

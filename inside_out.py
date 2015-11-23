@@ -8,8 +8,7 @@ Frederik Roenn Stensaeth, Phineas Callahan
 # dict[lhs][rhs] -> prob (float form)
 
 from math import log
-import parse
-import grammar
+import parse, cky
 
 def potential(tree, grammar):
 	"""
@@ -121,14 +120,19 @@ def beta(sentence, grammar, trees):
                         
     return beta
 	
-def insideOutside(xx):
+def insideOutside(sentence, grammar):
 	"""
 	insideOutside() xx
 
 	@params: xx
 	@return: xx
 	"""
-	inside = calculateInsideProbabilities(sentence_list, grammar)
-	outside = getOutsideProbabilties(x)
+    
+    print 'Parsing'
+    trees = cky.cky(grammar, sentence)
+    print 'Inside'
+	inside = alpha(sentence, grammar, trees)
+    print 'Outside'
+	outside = beta(sentence, grammar, trees)
 
 	return None
