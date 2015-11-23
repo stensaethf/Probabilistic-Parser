@@ -78,8 +78,5 @@ def main():
     # print len(parsed_trees)
     # for tree in parsed_trees:
     #     print tree
->>>>>>> 71f83af4ed4105d70f385f85c26c92cc08de1d48
-#    
-#    
 if __name__=='__main__':
     main()
