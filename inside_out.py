@@ -10,7 +10,7 @@ Frederik Roenn Stensaeth, Phineas Callahan
 from math import log
 import parse
 
-def potential(root, grammar):
+def potential(tree, grammar):
 	"""
 	potential() xx
 
@@ -19,15 +19,31 @@ def potential(root, grammar):
 	"""
 	potential = 0
 
-	if root.children == []
+	if tree.status:
+		# Potential of a leaf is 0 (log scale).
 		return potential
 	else:
-		child_list = []
-		for child in root.children:
-			child_list.append(child.value)
-			potential += potential(child, grammar)
+		left = tree.left
+		right = tree.right
 
-		prob = grammar.rules[root.value][' '.join(child_list)]
+		potential += potential(left, grammar)
+		potential += potential(right, grammar)
+
+		prob = 1
+		# Probability of root going to its children.
+		for rule in grammar.NR[tree.root].values():
+			derivation = rule.rhs
+			if len(derivation) == 2:
+				B = derivation[0]
+				C = derivation[1]
+				if B == left.root and C == right.root:
+					prob = log(rule.prob)
+		# child_list = []
+		# for child in root.children:
+		# 	child_list.append(child.value)
+		# 	potential += potential(child, grammar)
+
+		# prob = grammar.rules[root.value][' '.join(child_list)]
 
 		potential += log(prob)
 

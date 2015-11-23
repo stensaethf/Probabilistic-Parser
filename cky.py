@@ -10,6 +10,7 @@ given a CFG (in almost-CNF) and a sentence.
 import sys
 import os.path
 from node import Node
+import math
 
 def parser(grammar_filename, sentence):
 	"""
@@ -49,10 +50,14 @@ def cky(grammar, sentence):
 
 				# print(g.TR['He']['NP'])
 
-				for rule in grammar.TR[terminal]:
-					table[j - 1][j].append(rule)
+				for rule in grammar.TR[terminal].values():
+					table[j - 1][j].append(rule.lhs)
+					start = j - 1
+					end = j - 1
+					# print(rule)
+					prob = math.log(rule.prob)
 					nodes_back[j - 1][j].append(
-						Node(rule, None, None, sentence[j - 1]))
+						Node(rule.lhs, None, None, sentence[j - 1], start, end, prob))
 		# print(table)
 		# sys.exit()
 		# Loop over diagonally in the table and fill in the fields using
@@ -66,9 +71,10 @@ def cky(grammar, sentence):
 				for lhs in grammar.NR:
 					# print
 					# print(rule)
-					for rhs in grammar.NR[lhs]:
+					for rule in grammar.NR[lhs].values():
+						# print(rule)
 						# print(derivation)
-						derivation = rhs.split('|')
+						derivation = rule.rhs#.split('|')
 						# print(derivation)
 						if len(derivation) == 2:
 							B = derivation[0]
@@ -88,8 +94,11 @@ def cky(grammar, sentence):
 									for c in nodes_back[k][j]:
 										if b.root == B and \
 										   c.root == C:
+										   	start = b.start
+											end = c.end
+											prob = b.prob + c.prob + math.log(rule.prob)
 											nodes_back[i][j].append(
-												Node(lhs, b, c, None))
+												Node(lhs, b, c, None, start, end, prob))
 	# print(table[0][n])
 	# sys.exit()
 	return nodes_back[0][n]
@@ -105,7 +114,11 @@ def printParseTrees(nodes_back):
 	check = False
 	for node in nodes_back:
 		if node.root == 'TOP':
-			print(getParseTree(node, 5))
+			print(node.start)
+			print(node.end)
+			print(node.prob)
+			print
+			# print(getParseTree(node, 5))
 			# print
 			check = True
 

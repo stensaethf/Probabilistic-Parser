@@ -68,7 +68,7 @@ def main():
     g = pickle.load(open('grammar.p', 'rb'))
 
     start_time = time.time()
-    print(len(cky.cky(g, words)))
+    cky.printParseTrees(cky.cky(g, words))
     end_time = time.time()
 
     print('Time:')
