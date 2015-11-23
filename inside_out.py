@@ -75,8 +75,8 @@ def getAlpha(sentence, grammar, trees):
 	for lhs in grammar.NR:
 		for rule in grammar.NR[lhs].values():
 			for i in range(n - 1):
-				for j in range(1, n):
-					for k in range(i+1, j):
+				for j in range(i, n):
+					for k in range(i, j):
 						prod = 1
 						prod *= rule.prob
 						prod *= alpha[rule.rhs[0]][i][k]
@@ -89,7 +89,9 @@ def getBeta(sentence, grammar, trees, alpha):
 	n = len(sentence)
 	beta = {lhs: [[0]*n]*n for lhs in grammar.non_terminals}
 	
-	beta[grammar.start_symbol][0][n-1]
+	# print(grammar.start_symbol)
+
+	beta[grammar.start_symbol][0][n-1] = 1
 	
 	for lhs in grammar.NR:
 		for rule in grammar.NR[lhs].values():
@@ -114,9 +116,6 @@ def getBeta(sentence, grammar, trees, alpha):
 					for k in range(j+1, n):
 						prod = 1
 						prod *= r_rule.prob
-#						print(i)
-#						print(k)
-#						print(alpha[rule.rhs[0]])
 						prod *= alpha[rule.rhs[0]][i][k]
 						prod *= beta[lhs][i][k]
 						beta[rule.rhs[1]][i][j] += prod
@@ -130,31 +129,35 @@ def insideOutside(sentence, grammar):
 	@params: xx
 	@return: xx
 	"""
+	n = len(sentence)
 	
 	print 'Parsing'
 	trees = cky.cky(grammar, sentence)
 	print 'Inside'
 	inside = getAlpha(sentence, grammar, trees)
+	# print(inside)
 	print 'Outside'
 	outside = getBeta(sentence, grammar, trees, inside)
-    
-    Z = inside[grammar.start_symbol][0][n-1]
-    mu = {lhs:[[0]*n]*n for lhs in inside}
-    
-    for lhs in mu:
-        for i in range(n):
-            for j in range(n):
-                mu[lhs][i][j] = inside[lhs][i][j]*outside[lhs][i][j]
-    
-    gamma = {rule:[[[0]*n]*n]*n for rule in grammar.NR}
-    for rule in grammar.NR:
-        for i in range(n):
-            for j in range(i+1, n):
-                for k in range(i,j):
-                    gamma[rule][i][k][j] = outside[rule.lhs][i][j]* \                                           rule.prob*inside[rule.rhs[0]][i][k]*inside[rule.rhs[1]][k+1][j]
-                    
-    print gamma
-    
+	
+	Z = inside[grammar.start_symbol][0][n-1]
+	mu = {lhs:[[0]*n]*n for lhs in inside}
+	
+	for lhs in mu:
+		for i in range(n):
+			for j in range(n):
+				mu[lhs][i][j] = inside[lhs][i][j]*outside[lhs][i][j]
+	
+	gamma = {}
+	for lhs in grammar.NR:
+		for rule in grammar.NR[lhs].values():
+			gamma[rule] = [[[0]*n]*n]*n
+			for i in range(n):
+				for j in range(i+1, n):
+					for k in range(i,j):
+						gamma[rule][i][k][j] = outside[rule.lhs][i][j]*rule.prob*inside[rule.rhs[0]][i][k]*inside[rule.rhs[1]][k+1][j]
+					
+	print gamma
+	
 def main():
     trees = []
     print 'Parsing trees'
@@ -179,4 +182,4 @@ def main():
     
 
 if __name__=='__main__':
-    main()
+	main()
