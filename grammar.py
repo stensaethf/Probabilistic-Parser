@@ -219,6 +219,10 @@ class Grammar:
 
     
     def from_count(self, count):
+        non_terminals = set()
+        terminals = set()
+        rules = {}
+        
         for lhs in count:
             lhs_sum = sum(count[lhs].values())
             for key,val in count[lhs].items():

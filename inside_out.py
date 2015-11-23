@@ -161,10 +161,10 @@ def insideOutside(sentence, grammar, count):
 				for j in range(i+1, n):
 					for k in range(i,j):
 						gamma[rule][i][k][j] = outside[rule.lhs][i][j]*rule.prob*inside[rule.rhs[0]][i][k]*inside[rule.rhs[1]][k+1][j]
-                        
-    for lhs in grammar.NR:
-        if lhs not in count:
-            count[lhs] = {}
+	
+	for lhs in grammar.NR:
+		if lhs not in count:
+			count[lhs] = {}
 		for rule in grammar.NR[lhs].values():
 			if tuple(rule.rhs) not in count[lhs]:
 				count[lhs][tuple(rule.rhs)] = 0
@@ -185,7 +185,7 @@ def insideOutside(sentence, grammar, count):
                 count[lhs][tuple(sentence[i])] += mu[lhs][i][i]/Z
             else:
                 count[lhs][tuple(sentence[i])] = mu[lhs][i][i]/Z
-    
+				
 	# values = count.values()
 	# for value in values:
 	# 	if value != 0 and value != 0.0:
@@ -208,6 +208,7 @@ def main():
 	g = grammar.Grammar(nodes = trees)
 	
 	g.write(open('cfg', 'wb'))
+	print 'Converting to CNF'
 	g.convertToCNF()
 	
 	
@@ -222,8 +223,7 @@ def main():
 
 	count = {}
 	for sent in sentences:
-		insideOutside(sent, g, count)
-        
+		insideOutside(sent, g, count)      
         
     for lhs in count:
         lhs_sum = sum(count[lhs].values())
@@ -236,6 +236,8 @@ def main():
             rule_dat.extend(list(val))
             rule_dat.append(val)
             grammar.add_rule(grammar.Rule(rule_dat))
+
+
 
 if __name__=='__main__':
 	main()
