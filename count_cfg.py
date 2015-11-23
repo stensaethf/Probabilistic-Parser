@@ -1,4 +1,4 @@
-import sys, os, types, counts, grammar, parse
+import sys, os, types, counts, grammar, parse, time
 from collections import Counter
 
 import cky, node
@@ -55,12 +55,12 @@ def main():
     print 'Converting trees to grammar'
     g = grammar.Grammar(nodes = trees)
     g.write(open('cfg', 'wb'))
-    print 'Converting grammar to CNF'
-    g.convertToCNF()
-    g.write(open('cnf', 'wb'))
-
+    
+    
+    start = time.time()
     print 'Parsing Sentence'
     words = ['He', 'glowered', 'down', 'at', 'her']
+
     #  (TOP (S (NP (PRP He)) (VP (VBD glowered) (ADVP (RP down)) 
     # (PP (IN at) (NP (PRP her))))))
     
@@ -85,6 +85,7 @@ def main():
 
     def isTop(node):
         return node.root == 'TOP'
+
 
     node_back = filter(isTop, nodes_back)
     node_back = [(node, inside_out.potential(node, g)) for node in node_back]
