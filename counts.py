@@ -24,8 +24,6 @@ def getCounts(counts_dict, root):
 			counts_dict[root.value] = {}
 			counts_dict[root.value][0] = 1
 
-		# # If the root has children we also want to count these.
-		# if root.children != []:
 		# Gets the list of children (their values).
 		child_list = []
 		for child_node in root.children:
@@ -74,23 +72,6 @@ def getProbabilities(counts_dict):
 			del prob_dict[lhs]
 
 	return prob_dict
-
-# # TEST
-# def main():
-# 	d = {}
-# 	d['a'] = {}
-# 	d['b'] = {}
-# 	d['a'][0] = 10
-# 	d['a']['aa aa'] = 5
-# 	d['a']['bb'] = 6
-# 	d['d'] = {}
-
-# 	prob = getCounts(d)
-
-# 	print(prob)
-
-# if __name__ == '__main__':
-# 	main()
 
 
 

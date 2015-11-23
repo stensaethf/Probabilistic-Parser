@@ -14,10 +14,12 @@ import pickle
 
 def potential(tree, grammar):
     """
-    potential() xx
+    potential() takes a tree and a grammar and returns the potential of that
+    tree (log form). The potential of a tree is the probability of the rules
+    in the tree multiplied with each other.
 
-    @params: xx
-    @return: xx
+    @params: tree and grammar.
+    @return: potential of the tree (log form).
     """
     pot = 0
 
@@ -31,10 +33,8 @@ def potential(tree, grammar):
         pot += potential(left, grammar)
         pot += potential(right, grammar)
 
-        prob = 0
-        # Probability of root going to its children.
+        prob = 1
 
-        # check = False
         for rule in grammar.NR[tree.root].values():
             derivation = rule.rhs
             if len(derivation) == 2:
@@ -42,24 +42,21 @@ def potential(tree, grammar):
                 C = derivation[1]
                 if B == left.root and C == right.root:
                     prob = rule.prob
-                    # check = True
-        # child_list = []
-        # for child in root.children:
-        #   child_list.append(child.value)
-        #   potential += potential(child, grammar)
 
-        # prob = grammar.rules[root.value][' '.join(child_list)]
-        # print(check)
-        pot *= prob
+        if prob == 0:
+            pot += -20000
+        else:
+            pot += log(prob)
 
     return pot
 
 def getAlpha(sentence, grammar, trees):
     """
-    calculateInsideProbabilities() xx
+    getAlpha() finds the inside probabilities for all the non-terminals in our
+    grammar, given a sentence and possible trees.
 
-    @params: xx
-    @return: xx
+    @params: sentence (list of strings), grammar and list of trees.
+    @return: inside matrix.
     """
     n = len(sentence)
     
@@ -88,11 +85,16 @@ def getAlpha(sentence, grammar, trees):
     return alpha
 
 def getBeta(sentence, grammar, trees, alpha):
+    """
+    getBeta() finds the outside probabilities for all the non-terminals in our
+    grammar, given a sentence and possible trees.
+
+    @params: sentence (list of strings), grammar and list of trees.
+    @return: outside matrix.
+    """
     n = len(sentence)
     beta = {lhs: [[0]*n]*n for lhs in grammar.non_terminals}
     
-    # print(grammar.start_symbol)
-
     beta[grammar.start_symbol][0][n-1] = 1
     
     for lhs in grammar.NR:
@@ -126,10 +128,11 @@ def getBeta(sentence, grammar, trees, alpha):
     
 def insideOutside(sentence, grammar, count):
     """
-    insideOutside() xx
+    insideOutside() finds the expected number of counts for rules in our
+    grammar, given a sentence.
 
-    @params: xx
-    @return: xx
+    @params: sentence (list of strings), grammar and count dictionary.
+    @return: n/a (updates count dictionary).
     """
     n = len(sentence)
     
@@ -176,97 +179,137 @@ def insideOutside(sentence, grammar, count):
         for lhs in grammar.TR[term]:
             if lhs not in count:
                 count[lhs] = {}
-            
-            
+              
     for i in range(n):
         for lhs in grammar.TR[sentence[i]]:
             if tuple([sentence[i]]) in count[lhs]:
                 count[lhs][tuple([sentence[i]])] += mu[lhs][i][i]/Z
             else:
                 count[lhs][tuple([sentence[i]])] = mu[lhs][i][i]/Z
-                
-    # values = count.values()
-    # for value in values:
-    #   if value != 0 and value != 0.0:
-    #       print value
-
-    
     
 def main():
-    if os.path.isfile('grammar.p'):
-        print('yeyeyeeye')
-        g = pickle.load(open('grammar.p', 'rb'))
+    if len(sys.argv) == 3:
+        sentences = sys.argv[2].split(' ')
 
-    else:
-        print('nonnononnono')
+        # Get the grammar.
+        file_path = sys.argv[1]
+
         trees = []
-        print 'Parsing trees'
-        for path in os.listdir(sys.argv[1]):
-            if path.split('.')[1] != 'prd':
-                continue
-                
-            file_path = sys.argv[1]+'/'+path
-            f = open(file_path, 'rb')
-            trees.extend(count_cfg.read_trees(f))
+        print 'Parsing trees in file...'
+        f = open(file_path, 'rb')
+        trees.extend(count_cfg.read_trees(f))
 
-        print 'Converting trees to grammar'
+        print 'Converting trees to grammar...'
         g = grammar.Grammar(nodes = trees)
 
-        print 'Converting to CNF'
+        print 'Converting to CNF...'
         g.convertToCNF()
 
-        pickle.dump(g, open('grammar.p', 'wb'))
-    
+        # Parse and get nodes back.
+        print 'Running CKY...'
+        nodes_back = cky.cky(g, sentences)
 
-    # x = 'In a different way the Equal Opportunities Commission and the Commission for Racial Equality are empowered by the Sex Discrimination Act 1975 and the Race Relations Act 1976'
-    print 'Parsing Sentence'
-    sentences = [['His', 'tall', 'frame'], 
-                 ['the', 'dog', 'saved'], 
-                 ['discover', 'the', 'first', 'snail'],
-                 ['it', 'is', 'juxtaposed', 'well'],
-                 ['Her', 'handling', 'of', 'paint'],
-                 ['He', 'glowered', 'down', 'at', 'her']]
+        # Only get the nodes back that have a TOP.
+        nodes_back_top = []
+        for tree in nodes_back:
+            if tree.root == 'TOP':
+                nodes_back_top.append(tree)
 
-    # sentences.append(x.split())
+        if nodes_back_top == []:
+            print('No tree could be constructed for the sentence.')
+            sys.exit()
+        elif len(nodes_back_top) == 1:
+            print('Only one valid tree found for the sentence.')
+            print(cky.getParseTree(nodes_back_top[0], 5))
 
-    for t in range(5):
-        num_t = [len(g.TR[lhs]) for lhs in g.TR]
-        num_n = [len(g.NR[lhs]) for lhs in g.NR]
+        max_pot = float('-inf')
+        min_pot = float('inf')
+        max_tree = nodes_back_top[0]
+        min_tree = nodes_back_top[0]
 
-        print sum(num_t), sum(num_n)
-        to_del = []
-        count = {}
-        for sent in sentences:
-            insideOutside(sent, g, count)      
+        for tree in nodes_back_top:
+            pot_tree = potential(tree, g)
+            if pot_tree > max_pot:
+                max_pot = pot_tree
+                max_tree = tree
+            elif pot_tree < min_pot:
+                min_pot = pot_tree
+                min_tree = tree
+
+        print('Max tree:')
+        print(cky.getParseTree(max_tree, 5))
+
+        print('Min tree:')
+        print(cky.getParseTree(min_tree, 5))
+    else:
+        if os.path.isfile('grammar.p'):
+            g = pickle.load(open('grammar.p', 'rb'))
+        else:
+            trees = []
+            print 'Parsing trees'
+            for path in os.listdir(sys.argv[1]):
+                if path.split('.')[1] != 'prd':
+                    continue
+                    
+                file_path = sys.argv[1]+'/'+path
+                f = open(file_path, 'rb')
+                trees.extend(count_cfg.read_trees(f))
+
+            print 'Converting trees to grammar'
+            g = grammar.Grammar(nodes = trees)
+
+            print 'Converting to CNF'
+            g.convertToCNF()
+
+            pickle.dump(g, open('grammar.p', 'wb'))
         
-        for lhs in count:
-            lhs_sum = sum(count[lhs].values())
-            if lhs_sum == 0:
-                to_del.append(lhs)
-            else:
+
+        print 'Parsing Sentence'
+
+        sentences = [['His', 'tall', 'frame'], 
+                     ['the', 'dog', 'saved'], 
+                     ['discover', 'the', 'first', 'snail'],
+                     ['it', 'is', 'juxtaposed', 'well'],
+                     ['Her', 'handling', 'of', 'paint'],
+                     ['He', 'glowered', 'down', 'at', 'her']]
+
+        for t in range(5):
+            num_t = [len(g.TR[lhs]) for lhs in g.TR]
+            num_n = [len(g.NR[lhs]) for lhs in g.NR]
+
+            print sum(num_t), sum(num_n)
+            to_del = []
+            count = {}
+            for sent in sentences:
+                insideOutside(sent, g, count)      
+            
+            for lhs in count:
+                lhs_sum = sum(count[lhs].values())
+                if lhs_sum == 0:
+                    to_del.append(lhs)
+                else:
+                    for key,val in count[lhs].items():
+                        count[lhs][key] = val/lhs_sum
+
+            for lhs in to_del:
+                del count[lhs]
+            
+            for lhs in count:
                 for key,val in count[lhs].items():
-                    count[lhs][key] = val/lhs_sum
+                    rule_dat = [lhs,]
+                    rule_dat.extend(list(key))
+                    rule_dat.append(val)
+                    g.add_rule(grammar.Rule(vals = rule_dat))
 
-        for lhs in to_del:
-            del count[lhs]
-        
-        for lhs in count:
-            for key,val in count[lhs].items():
-                rule_dat = [lhs,]
-                rule_dat.extend(list(key))
-                rule_dat.append(val)
-                g.add_rule(grammar.Rule(vals = rule_dat))
+        def isTop(node):
+           return node.root == 'TOP'
 
-    def isTop(node):
-       return node.root == 'TOP'
-
-    for s in sentences:
-        nodes_back = cky.cky(g, s)
-        node_back = filter(isTop, nodes_back)
-        node_back = [(node, potential(node, g)) for node in node_back]
-        node_back.sort(key=lambda node: -1*node[1])
-        cky.printParseTrees([node_back[0][0]])
-        # cky.getParseTree(node_back[0][0], 5)
+        for s in sentences:
+            nodes_back = cky.cky(g, s)
+            node_back = filter(isTop, nodes_back)
+            node_back = [(node, potential(node, g)) for node in node_back]
+            node_back.sort(key=lambda node: -1*node[1])
+            cky.printParseTrees([node_back[0][0]])
 
 
 

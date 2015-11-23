@@ -2,6 +2,10 @@ import grammar
 from copy import copy
 
 class State:
+    """
+    State is a class for containing the state in the Earley parser.
+    Xx
+    """
     
     def __init__(self, rule, pos, origin, end):
         self.rule = rule
@@ -169,7 +173,6 @@ def parse(g, words):
         return [recursive_tree(x.completed[0]) for x in heads]
         
 def predictor(g, state, i):
-    #print state
     predictions = set()
     head = state.next_cat()
     if head in g.NR:

@@ -36,63 +36,40 @@ def cky(grammar, sentence):
 			 list of root nodes for the solutions.
 	"""
 	n = len(sentence)
-	# Should we make this a dictionary? --> less memory.
 	table = [[[] for i in range(n + 1)] for j in range(n + 1)]
-	# Should we make this a dictionary? --> less memory.
 	nodes_back = [[[] for i in range(n + 1)] for j in range(n + 1)]
 
 	for j in range(1, n + 1):
 		# table[j - 1][j] += {A if A -> words[j] \in gram}
-		# for rule in grammar:
 		for terminal in grammar.TR:
-			# if [sentence[j - 1]] in grammar[rule]:
 			if sentence[j - 1] == terminal:
-
-				# print(g.TR['He']['NP'])
-
 				for rule in grammar.TR[terminal].values():
 						table[j - 1][j].append(rule.lhs)
 						start = j - 1
 						end = j - 1
-						# print(rule)
 						if rule.prob != 0:
 							prob = rule.prob
 						else:
 							prob = 0
 						nodes_back[j - 1][j].append(
 							Node(rule.lhs, None, None, sentence[j - 1], start, end, prob))
-		# print(table)
-		# sys.exit()
+
 		# Loop over diagonally in the table and fill in the fields using
 		# the rules of the grammar. We check subnodes to find out whether
 		# a rule applies or not.
 		for i in reversed(range(0, j - 1)): #(j - 2, 1) goes to 0
 			for k in range(i + 1, j): # goes to j - 1
-				# table[i][j] += {A if A -> B C \in gram,
-				# 				  B \in table[i][k]
-				#				  C \in table[k][j]}
 				for lhs in grammar.NR:
-					# print
-					# print(rule)
 					for rule in grammar.NR[lhs].values():
-						# print(rule)
-						# print(derivation)
-						derivation = rule.rhs#.split('|')
-						# print(derivation)
+						derivation = rule.rhs
 						if len(derivation) == 2:
 							B = derivation[0]
 							C = derivation[1]
-							# print(B)
-							# print(C)
 
 							# If A -> B C and B in table[i][k] and C in
 							# table[k][j].
-							# print(B in table[i][k])
-							# print(C in table[k][j])
 							if B in table[i][k] and C in table[k][j]:
-								# if rule.prob != 0:
 								table[i][j].append(lhs)
-							# printnt('yeeyeyeyeyeyeyeeyeyey')
 								for b in nodes_back[i][k]:
 									for c in nodes_back[k][j]:
 										if b.root == B and \
@@ -105,8 +82,7 @@ def cky(grammar, sentence):
 												prob = 0
 											nodes_back[i][j].append(
 												Node(lhs, b, c, None, start, end, prob))
-	# print(table[0][n])
-	# sys.exit()
+
 	return nodes_back[0][n]
 
 def printParseTrees(nodes_back):
@@ -120,12 +96,7 @@ def printParseTrees(nodes_back):
 	check = False
 	for node in nodes_back:
 		if node.root == 'TOP':
-			# print(node.start)
-			# print(node.end)
-			# print(node.prob)
-			# print
 			print(getParseTree(node, 5))
-			# print
 			check = True
 
 	if not check:
@@ -199,9 +170,6 @@ def getGrammar(grammar_filename):
 					printError(1)
 				elif right_side[1][0] == right_side[1][0].lower():
 					printError(1)
-			# else: # len(right_side) == 1
-			# 	if right_side[0][0] == right_side[0][0].lower():
-			# 		printError(1)
 
 			# Left hand side can only contain one element and that element
 			# needs to be uppercase for the first letter.

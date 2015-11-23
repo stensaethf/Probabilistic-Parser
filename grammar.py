@@ -4,14 +4,13 @@ Frederik Roenn Stensaeth, Phineas Callahan
 11.19.15
 '''
 
-# NOTES TO SELF:
-# Format:
-# LHS , RHS , prob
-# Example: S , NP VP , 0.5
-
 import re, string
 
 class Rule:
+    """
+    Rule is a class for containing rules. An instance of the class has a
+    left hand side, a right hand side and probability.
+    """
     
     def __init__(self, l = None, r = None, p = 0.0, vals = None):
         if vals:
@@ -33,6 +32,11 @@ class Rule:
         return self.lhs == other.lhs and self.rhs == self.rhs
 
 class Grammar:
+    """
+    Grammar is a class for containing grammars. An instance of the class has
+    both a set for terminals and non terminals, and dictionaries that contain
+    the NR and TR rules.
+    """
     
     def __init__(self, E = None, N = None, R = None, S = 'TOP', nodes = None):
         if len(nodes):
@@ -52,9 +56,21 @@ class Grammar:
         self.count = 0
 
     def incrementCount(self):
+        """
+        incrementCount() increments the count of the grammar by one.
+
+        @params: n/a.
+        @return: n/a.
+        """
         self.count = self.count + 1
         
     def convertToCNF(self):
+        """
+        convertToCNF() converts the grammar to CNF from CFG.
+
+        @params: n/a.
+        @return: n/a.
+        """
         curr_rules = []
         for lhs in self.NR:
             curr_dict = self.NR[lhs]
@@ -83,6 +99,12 @@ class Grammar:
         
         
     def UNIT(self, rules):
+        """
+        UNIT() removes all unit productions in the grammar.
+
+        @params: rules.
+        @return: new rules.
+        """
         new_rules = []
 
         rule_lookup = {x.lhs : {} for x in rules}
@@ -116,6 +138,13 @@ class Grammar:
                      
                 
     def TERM(self, rules):
+        """
+        TERM() removes any rule that contains a terminal and something else.
+        Can be other terminals or other non-terminals.
+
+        @params: rules.
+        @return: new rules.
+        """
         new_rules = []
         
         while(len(rules)):
@@ -137,6 +166,14 @@ class Grammar:
         return new_rules
     
     def BIN(self, rules):
+        """
+        BIN() makes sure that everything is a binary. Anything with more than
+        two non-terminals are made into a sequence of rules that converts them
+        to binary form.
+
+        @params: rules.
+        @return: new rules.
+        """
         new_rules = []
         
         while(len(rules)):
@@ -160,20 +197,33 @@ class Grammar:
         return new_rules    
         
     def isUnit(self, rule):
+        """
+        isUnit() checks whether a rule is a unit production.
+
+        @params: rule.
+        @return: boolean.
+        """
         return len(rule.rhs) == 1 and rule.rhs[0] not in self.terminals
     
     def new_symbol(self):
-        # print(self.non_terminals)
-        # while 'X'+str(self.count) in self.non_terminals:
-        #     sys.exit()
-        #     self.incrementCount()
+        """
+        new_symbol() creates a new symbol.
+
+        @params: n/a.
+        @return: new symbol.
+        """
         n_symbol = 'X'+str(self.count)
         self.incrementCount()
                 
         return n_symbol
-        # return 'X'+str(self.count)
 
     def add_rule(self, rule):
+        """
+        add_rule() adds the given rule to the grammar.
+
+        @params: rule.
+        @return: n/a.
+        """
         entry = {}
         if len(rule.rhs) == 1 and rule.rhs[0] in self.terminals:
             terminal = rule.rhs[0]
@@ -193,6 +243,12 @@ class Grammar:
             entry[key] = rule
     
     def write(self, output_file):
+        """
+        write() writes the grammar to the given output file.
+
+        @params: name of output file.
+        @return: n/a.
+        """
         for lhs in self.NR:
             for rule in self.NR[lhs].values():
                 rule_str = rule.lhs+'|'+'|'.join(rule.rhs)+'|'+str(rule.prob)
@@ -207,18 +263,27 @@ class Grammar:
         output_file.close()
     
     def transform_nodes(self, nodes):
-        # non_terminals = set()
-        # terminals = set()
-        # rules = {}
-        
+        """
+        transform_nodes() takes a set of nodes and calls recursive_count() to
+        count the number of times each rule is seen in the nodes.
+
+        @params: nodes.
+        @return: count dictionary.
+        """
         count = {}
         for node in nodes:
             self.recursive_count(node, count)
                 
         return count
-
     
     def from_count(self, count):
+        """
+        from_count() creates terminal and non terminal sets and a dictionary
+        of rules from the given count dictionary.
+
+        @params: count dictionary.
+        @return: terminals (set), non terminals (set), rules.
+        """
         non_terminals = set()
         terminals = set()
         rules = {}
@@ -248,6 +313,13 @@ class Grammar:
         return terminals, non_terminals, rules
             
     def recursive_count(self, node, count):
+        """
+        recursive_count() recusively counts the number of times a rule is seen,
+        given a root node of a tree.
+
+        @params: node, count dictionary.
+        @return: n/a.
+        """
         if len(node.children):
             entry = {}
             if node.value in count:
@@ -264,14 +336,15 @@ class Grammar:
                 
             for child in node.children:
                 self.recursive_count(child, count)
-                
-    def normalize(self):
-        it_is_3am = {}
-        
-        
-    
-                
+                                
 def read_grammar(input_file):
+    """
+    read_grammar() takes the contents of a file and reads in the grammar from
+    that file.
+
+    @params: contents of file were grammar is stored.
+    @return: grammar object.
+    """
     rules = {}
     non_terminals = set()
     terminals = set()

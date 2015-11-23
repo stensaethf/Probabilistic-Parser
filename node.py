@@ -18,13 +18,16 @@ class Node:
 	- right
 	- status
 	- terminal
+	- start
+	- end
+	- prob
 	"""
 
 	def __init__(self, root, left, right, leaf, start, end, prob):
 		"""
-		Constructor for the Node class. Root, left, right, terminal and status
-		are set up here. Status is infered from whether a terminal value is
-		provided or not.
+		Constructor for the Node class. Root, left, right, terminal, status,
+		start, end and prob are set up here. Status is infered from whether a 
+		terminal value is provided or not.
 		"""
 		self._root = root
 		self._left = left
@@ -39,14 +42,32 @@ class Node:
 
 	@property
 	def start(self):
+		"""
+		start allows the user to get the start of the node.
+
+		@params: n/a.
+		@return: the start.
+		"""
 		return self._start
 
 	@property
 	def end(self):
+		"""
+		end allows the user to get the end of the node.
+
+		@params: n/a.
+		@return: the end.
+		"""
 		return self._end
 
 	@property
 	def prob(self):
+		"""
+		prob allows the user to get the prob of the node.
+
+		@params: n/a.
+		@return: the prob.
+		"""
 		return self._prob
 
 	@property
