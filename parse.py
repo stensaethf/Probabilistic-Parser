@@ -129,7 +129,8 @@ def parse(g, words):
                 if state.incomplete():
                     nsymbol = state.next_cat()
                     
-                    if nsymbol in g.non_terminals and nsymbol not in nt_scanned:
+                    if nsymbol in g.NR and nsymbol not in nt_scanned:
+                        
                         predictions = predictor(g, state, i)
                         nt_scanned.add(nsymbol)
                         for p in predictions:
@@ -142,7 +143,9 @@ def parse(g, words):
                         if c not in curr:
                            s[i].append(c)
                             
-                    curr.update(completed)  
+                    curr.update(completed)
+                    
+                curr.add(state)
             
             scanned = []
             if i<len(words) and words[i] in g.TR:
@@ -153,15 +156,20 @@ def parse(g, words):
                 s.append(scanned)
                     
             s[i] = curr
+            print len(s[i])
+#            for state in s[i]:
+#                print state
         
         def isHead(state):
-            return state.rule.lhs == 'TOP'
+            return state.rule.lhs == 'BETA'
         
         heads = filter(isHead, s[-1])
-  
+    
+        print len(heads)
         return [recursive_tree(x.completed[0]) for x in heads]
         
 def predictor(g, state, i):
+    #print state
     predictions = set()
     head = state.next_cat()
     if head in g.NR:
@@ -188,8 +196,11 @@ def recursive_tree(state):
     node.start = state.origin
     node.end = state.end
 
-    for child in state.completed:
-        node.append(recursive_tree(child))
+    if len(state.completed):
+        for child in state.completed:
+            node.append(recursive_tree(child))
+    else:
+        node.append(ParseNode(state.rule.rhs[0]))
 
     return node
 

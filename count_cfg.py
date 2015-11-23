@@ -4,7 +4,6 @@ from collections import Counter
 def read_trees(f):
     tokens = []
     for line in f:
-        print line
         line = line.replace('(', ' ( ')
         line = line.replace(')', ' ) ')
         tokens.extend(line.split())
@@ -50,21 +49,20 @@ def main():
         trees.extend(read_trees(f))
 
     print 'Converting trees to grammar'
-    print trees[0]
     g = grammar.Grammar(nodes = trees)
-    g.write(open('cfg.txt', 'wb'))
+    g.write(open('cfg', 'wb'))
     print 'Converting grammar to CNF'
     g.convertToCNF()
-    g.write(open('cnf.txt', 'wb'))
+    g.write(open('cnf', 'wb'))
 
     print 'Parsing Sentence'
-    words = ['He', 'glowered', 'down', 'at', 'her']
+    words = ['writings']
     #  (TOP (S (NP (PRP He)) (VP (VBD glowered) (ADVP (RP down)) 
     # (PP (IN at) (NP (PRP her))))))
     parsed_trees = parse.parse(g, words)
     print len(parsed_trees)
     for tree in parsed_trees:
-        print tree.recursive_print(0)
+        print tree
 #    
 if __name__=='__main__':
     main()
