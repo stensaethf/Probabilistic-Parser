@@ -161,8 +161,8 @@ def insideOutside(sentence, grammar, count):
 				for j in range(i+1, n):
 					for k in range(i,j):
 						gamma[rule][i][k][j] = outside[rule.lhs][i][j]*rule.prob*inside[rule.rhs[0]][i][k]*inside[rule.rhs[1]][k+1][j]
-					
-	for lhs in grammar.NR:
+                        
+    for lhs in grammar.NR:
         if lhs not in count:
             count[lhs] = {}
 		for rule in grammar.NR[lhs].values():
@@ -175,7 +175,7 @@ def insideOutside(sentence, grammar, count):
 	
 	for term in grammar.TR:
 		for lhs in grammar.TR[term]:
-	       if lhs not in count:
+            if lhs not in count:
                 count[lhs] = {}
             
             
@@ -225,9 +225,17 @@ def main():
 		insideOutside(sent, g, count)
         
         
-#    for lhs in count:
-#        lhs_sum = sum(count[lhs].values
-	
+    for lhs in count:
+        lhs_sum = sum(count[lhs].values())
+        for key,val in count[lhs]:
+            count[lhs][key] = val/lhs_sum
+    
+    for lhs in count:
+        for key,val in count[lhs]:
+            rule_dat = [lhs,]
+            rule_dat.extend(list(val))
+            rule_dat.append(val)
+            grammar.add_rule(grammar.Rule(rule_dat))
 
 if __name__=='__main__':
 	main()
