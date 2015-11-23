@@ -6,9 +6,9 @@ Frederik Roenn Stensaeth, Phineas Callahan
 
 # Grammar.rules -> dict
 # dict[lhs][rhs] -> prob (float form)
-
+import count_cfg
 from math import log
-import parse, cky
+import parse, cky, grammar, os, sys
 
 def potential(tree, grammar):
 	"""
@@ -122,7 +122,7 @@ def getBeta(sentence, grammar, trees, alpha):
 						
 	return beta
 	
-def insideOutside(sentence, grammar):
+def insideOutside(sentence, grammar, count):
 	"""
 	insideOutside() xx
 
@@ -151,13 +151,25 @@ def insideOutside(sentence, grammar):
 	for lhs in grammar.NR:
 		for rule in grammar.NR[lhs].values():
 			gamma[rule] = [[[0]*n]*n]*n
-			for i in range(n):
+			for i in range(n-1):
 				for j in range(i+1, n):
 					for k in range(i,j):
 						gamma[rule][i][k][j] = outside[rule.lhs][i][j]*rule.prob*inside[rule.rhs[0]][i][k]*inside[rule.rhs[1]][k+1][j]
 					
-	print gamma
+	for lhs in grammar.NR:
+        for rule in grammar.NR[lhs].values():
+            count[rule] = 0
+            for i in range(n-1):
+                for j in range(i+1, n):
+                    for k in range(i, j):
+                        count[rule] += gamma[rule][i][k][j]/Z
+    
+    for i in range(n):
+        for rule in grammar.TR[sentence[i]].values():
+            count[rule] += mu[rule.lhs][i][i]/Z #something like this?
 	
+    print(count)
+    
 def main():
     trees = []
     print 'Parsing trees'
@@ -178,7 +190,7 @@ def main():
     
     print 'Parsing Sentence'
     words = ['He', 'glowered', 'down', 'at', 'her']
-    inside_out.insideOutside(words, g)
+    insideOutside(words, g, count)
     
 
 if __name__=='__main__':
