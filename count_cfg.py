@@ -54,6 +54,7 @@ def main():
 
     print 'Converting trees to grammar'
     g = grammar.Grammar(nodes = trees)
+    
     g.write(open('cfg', 'wb'))
     g.convertToCNF()
     

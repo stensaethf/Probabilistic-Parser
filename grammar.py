@@ -213,7 +213,7 @@ class Grammar:
         count = {}
         for node in nodes:
             self.recursive_count(node, count)
-            
+        
         for lhs in count:
             lhs_sum = sum(count[lhs].values())
             for key,val in count[lhs].items():
