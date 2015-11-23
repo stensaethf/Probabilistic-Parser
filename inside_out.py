@@ -33,27 +33,44 @@ def potential(root, grammar):
 
 	return potential
 
-def calculateInsideProbabilities(sentence_list, grammar):
+def alpha(sentence, grammar, trees):
 	"""
 	calculateInsideProbabilities() xx
 
 	@params: xx
 	@return: xx
 	"""
-	alpha = {}
-	rules = gramamr.rules
-	j = xx 
-
-	for lhs in rules:
+    n = len(sentence)
+    
+    alpha = {lhs: [[0]*n]*n for lhs in g.non_terminals}
+    
+    #BASE CASE
+    for lhs in rules:
+        for i in range(n):
+            word = sentence[i]
+            if word in grammar.TR and lhs in grammar.TR[word]:
+                alpha[lhs][i][i] = grammar.TR[word][lhs].prob
+            else:
+                alpha[lhs][i][i] = 0
+    
+    for lhs in rules:
 		total = 0
-		for rhs in rules[lhs]:
-			for i in range(1, n - 1):
+		for rule in rules[lhs].values():
+			for i in range(n - 1):
 				for j in range(1, n):
-					for k in range(i, j - 1):
-						parse.parse(grammar, words)
-						pot = potential(xx)
+					for k in range(i+1, j):
+						prod = 1
+                        prod *= rule.prob
+                        prod *= alpha[rule.rhs[0]][i][k]
+                        prod *= alpha[rule.rhs[1]][k+1][j]
 
-	return None
+	return alpha
+
+def beta(sentence, grammar, trees):
+    
+    beta = {lhs: [[0]*n]*n for lhs in g.non_terminals}
+    
+    
 
 def insideOutside(xx):
 	"""
