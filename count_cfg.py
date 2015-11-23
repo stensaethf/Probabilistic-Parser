@@ -54,11 +54,10 @@ def main():
 
     print 'Converting trees to grammar'
     g = grammar.Grammar(nodes = trees)
+    
     g.write(open('cfg', 'wb'))
     g.convertToCNF()
     
-    for lhs in g.NR:
-        print sum([x.prob for x in g.NR[lhs].values()])
     
     print 'Parsing Sentence'
     words = ['He', 'glowered', 'down', 'at', 'her']
