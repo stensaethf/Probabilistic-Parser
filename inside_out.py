@@ -133,11 +133,17 @@ def insideOutside(sentence, grammar, count):
 	
 	print 'Parsing'
 	trees = cky.cky(grammar, sentence)
+	trees_top = []
+	for tree in trees:
+		if tree.root == 'TOP':
+			trees_top.append(tree)
+
+	cky.printParseTrees(trees_top)
 	print 'Inside'
-	inside = getAlpha(sentence, grammar, trees)
+	inside = getAlpha(sentence, grammar, trees_top)
 	# print(inside)
 	print 'Outside'
-	outside = getBeta(sentence, grammar, trees, inside)
+	outside = getBeta(sentence, grammar, trees_top, inside)
 	
 	Z = inside[grammar.start_symbol][0][n-1]
 	mu = {lhs:[[0]*n]*n for lhs in inside}
@@ -157,41 +163,65 @@ def insideOutside(sentence, grammar, count):
 						gamma[rule][i][k][j] = outside[rule.lhs][i][j]*rule.prob*inside[rule.rhs[0]][i][k]*inside[rule.rhs[1]][k+1][j]
 					
 	for lhs in grammar.NR:
-        for rule in grammar.NR[lhs].values():
-            count[rule] = 0
-            for i in range(n-1):
-                for j in range(i+1, n):
-                    for k in range(i, j):
-                        count[rule] += gamma[rule][i][k][j]/Z
-    
-    for i in range(n):
-        for rule in grammar.TR[sentence[i]].values():
-            count[rule] += mu[rule.lhs][i][i]/Z #something like this?
+		for rule in grammar.NR[lhs].values():
+			if rule not in count:
+				count[rule] = 0
+			for i in range(n-1):
+				for j in range(i+1, n):
+					for k in range(i, j):
+						count[rule] += gamma[rule][i][k][j]/Z
 	
-    print(count)
-    
-def main():
-    trees = []
-    print 'Parsing trees'
-    for path in os.listdir(sys.argv[1]):
-        if path.split('.')[1] != 'prd':
-            continue
-            
-        file_path = sys.argv[1]+'/'+path
-        f = open(file_path, 'rb')
-        trees.extend(count_cfg.read_trees(f))
+	for i in range(n):
+		for rule in grammar.TR[sentence[i]].values():
+			if rule in count:
+				count[rule] += mu[rule.lhs][i][i]/Z
+			else:
+				count[rule] = mu[rule.lhs][i][i]/Z
+	
+	# values = count.values()
+	# for value in values:
+	# 	if value != 0 and value != 0.0:
+	# 		print value
 
-    print 'Converting trees to grammar'
-    g = grammar.Grammar(nodes = trees)
-    
-    g.write(open('cfg', 'wb'))
-    g.convertToCNF()
-    
-    
-    print 'Parsing Sentence'
-    words = ['He', 'glowered', 'down', 'at', 'her']
-    insideOutside(words, g, count)
-    
+	
+	
+def main():
+	trees = []
+	print 'Parsing trees'
+	for path in os.listdir(sys.argv[1]):
+		if path.split('.')[1] != 'prd':
+			continue
+			
+		file_path = sys.argv[1]+'/'+path
+		f = open(file_path, 'rb')
+		trees.extend(count_cfg.read_trees(f))
+
+	print 'Converting trees to grammar'
+	g = grammar.Grammar(nodes = trees)
+	
+	g.write(open('cfg', 'wb'))
+	g.convertToCNF()
+	
+	
+	print 'Parsing Sentence'
+	sentences = [['His', 'tall', 'frame'], 
+				 ['the', 'dog', 'saved'], 
+				 ['discover', 'the', 'first', 'snail'],
+				 ['it', 'is', 'juxtaposed', 'well'],
+				 ['Her', 'handling', 'of', 'paint'],
+				 ['He', 'glowered', 'down', 'at', 'her']]
+	words = ['He', 'glowered', 'down', 'at', 'her']
+
+	count = {}
+	for sent in sentences:
+		insideOutside(sent, g, count)
+
+	values = count.values()
+	print(values)
+	# for value in values:
+	# 	if value != 0 and value != 0.0:
+	# 		print value
+	
 
 if __name__=='__main__':
 	main()
