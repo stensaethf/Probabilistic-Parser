@@ -1,4 +1,4 @@
-import sys, os, types, counts, grammar, parse
+import sys, os, types, counts, grammar, parse, time
 from collections import Counter
 
 def read_trees(f):
@@ -51,18 +51,20 @@ def main():
     print 'Converting trees to grammar'
     g = grammar.Grammar(nodes = trees)
     g.write(open('cfg', 'wb'))
-    print 'Converting grammar to CNF'
-    g.convertToCNF()
-    g.write(open('cnf', 'wb'))
-
+    
+    
+    start = time.time()
     print 'Parsing Sentence'
-    words = ['writings']
-    #  (TOP (S (NP (PRP He)) (VP (VBD glowered) (ADVP (RP down)) 
-    # (PP (IN at) (NP (PRP her))))))
+    words = ['He', 'glowered', 'down', 'at', 'her']
+#      (TOP (S (NP (PRP He)) (VP (VBD glowered) (ADVP (RP down)) 
+#     (PP (IN at) (NP (PRP her))))))
     parsed_trees = parse.parse(g, words)
-    print len(parsed_trees)
+    end = time.time()
+    print end-start
+    
     for tree in parsed_trees:
         print tree
+#    
 #    
 if __name__=='__main__':
     main()

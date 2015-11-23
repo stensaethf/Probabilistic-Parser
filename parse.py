@@ -33,7 +33,7 @@ class State:
         return s
     
     def __eq__(self, other):
-        return self.__str__() == other.__str__()
+        return self.__str__() == other.__str__() 
     
     def __repr__(self):
         return self.__str__()
@@ -137,7 +137,7 @@ def parse(g, words):
                             if p not in curr and not p.__eq__(state):
                                 s[i].append(p)
                                 curr.add(p)
-                else:
+                else:   
                     completed = completer(state, i, s)
                     for c in completed:
                         if c not in curr:
