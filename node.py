@@ -20,7 +20,7 @@ class Node:
 	- terminal
 	"""
 
-	def __init__(self, root, left, right, end):
+	def __init__(self, root, left, right, leaf):
 		"""
 		Constructor for the Node class. Root, left, right, terminal and status
 		are set up here. Status is infered from whether a terminal value is
@@ -29,9 +29,11 @@ class Node:
 		self._root = root
 		self._left = left
 		self._right = right
-		self._terminal = end
+		self._terminal = leaf
+		self._start = start
+		self._end = end
 		self._status = True
-		if end == None:
+		if leaf == None:
 			self._status = False
 
 	@property

@@ -1,6 +1,10 @@
 import sys, os, types, counts, grammar, parse
 from collections import Counter
 
+import cky, node
+import time
+import pickle
+
 def read_trees(f):
     tokens = []
     for line in f:
@@ -56,13 +60,24 @@ def main():
     g.write(open('cnf', 'wb'))
 
     print 'Parsing Sentence'
-    words = ['writings']
+    words = ['He', 'glowered', 'down', 'at', 'her']
     #  (TOP (S (NP (PRP He)) (VP (VBD glowered) (ADVP (RP down)) 
     # (PP (IN at) (NP (PRP her))))))
-    parsed_trees = parse.parse(g, words)
-    print len(parsed_trees)
-    for tree in parsed_trees:
-        print tree
+    
+    pickle.dump(g, open('grammar.p', 'wb'))
+    g = pickle.load(open('grammar.p', 'rb'))
+
+    start_time = time.time()
+    print(len(cky.cky(g, words)))
+    end_time = time.time()
+
+    print('Time:')
+    print(end_time - start_time)
+
+    # parsed_trees = parse.parse(g, words)
+    # print len(parsed_trees)
+    # for tree in parsed_trees:
+    #     print tree
 #    
 if __name__=='__main__':
     main()
