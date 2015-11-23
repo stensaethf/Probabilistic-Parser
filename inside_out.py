@@ -217,7 +217,7 @@ def main():
 		insideOutside(sent, g, count)
 
 	values = count.values()
-	print(values)
+	# print(values)
 	# for value in values:
 	# 	if value != 0 and value != 0.0:
 	# 		print value
