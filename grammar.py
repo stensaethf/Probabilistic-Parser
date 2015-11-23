@@ -22,9 +22,15 @@ class Rule:
             self.lhs = l
             self.rhs = r
             self.prob = p
+
+    def __hash__(self):
+        return hash(self.lhs)+hash(tuple(self.rhs))
         
     def __str__(self):
         return self.lhs+' -> '+'|'.join(self.rhs)+' '+str(self.prob)
+
+    def __eq__(self, other):
+        return self.lhs == other.lhs and self.rhs == self.rhs
 
 class Grammar:
     
@@ -43,6 +49,9 @@ class Grammar:
                 
         self.start_symbol = S
         self.count = 0
+
+    def incrementCount(self):
+        self.count = self.count + 1
         
     def convertToCNF(self):
         curr_rules = []
@@ -60,28 +69,37 @@ class Grammar:
         curr_rules = self.UNIT(curr_rules)
         
         for rule in curr_rules:
-            if rule.lhs == 'NAC':
-                print rule
+            # if rule.lhs == 'NAC':
+            #     print rule
             self.add_rule(rule)
         
         
     def UNIT(self, rules):
         new_rules = []
-        rule_lookup = { x.lhs : { '|'.join(x.rhs): x} for x in rules}
+
+        rule_lookup = {x.lhs : {} for x in rules}
+        for rule in rules:
+            rule_lookup[rule.lhs]['|'.join(rule.rhs)] = rule
+
         processed = set()
-        
+
         while len(rules):
             rule = rules.pop()
-            print rule
+            # print rule
             if self.isUnit(rule):
                 processed.add(rule)
+                # print rule
+                # print rule in processed
                 for x in rule_lookup[rule.rhs[0]].values():
                     prob = x.prob*rule.prob
                     new_rule = Rule(l = rule.lhs,r = x.rhs,p = prob)
-                    if not self.isUnit(new_rule):
-                        new_rules.append(new_rule)
-                    elif new_rule not in processed:
-                        rules.append(new_rule)
+                    if new_rule not in processed:
+                        if not self.isUnit(new_rule):
+                            new_rules.append(new_rule)
+                        else:
+                            rules.append(new_rule)
+                            # print '    '+str(new_rule),
+                            # print new_rule in processed
                         
             else:
                 new_rules.append(rule)
@@ -137,11 +155,16 @@ class Grammar:
         return len(rule.rhs) == 1 and rule.rhs[0] not in self.terminals
     
     def new_symbol(self):
-        while 'X'+str(self.count) in self.non_terminals:
-            self.count += 1
+        # print(self.non_terminals)
+        # while 'X'+str(self.count) in self.non_terminals:
+        #     sys.exit()
+        #     self.incrementCount()
+        n_symbol = 'X'+str(self.count)
+        self.incrementCount()
                 
-        return 'X'+str(self.count)
-    
+        return n_symbol
+        # return 'X'+str(self.count)
+
     def add_rule(self, rule):
         entry = {}
         if len(rule.rhs) == 1 and rule.rhs[0] in self.terminals:

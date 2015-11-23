@@ -55,6 +55,10 @@ class ParseNode:
         self.children = list()
         self.value = val
 
+        self.prob = 0.0
+        self.start = None
+        self.end = None
+
     def append(self, node):
         self.children.append(node)
         
@@ -117,7 +121,8 @@ def parse(g, words):
             curr = set()
             scanned = list()
             nt_scanned = set()
-            
+            if i < len(words):
+                print words[i]
             while(s[i]):
                 state = s[i].pop()
                 
@@ -154,7 +159,7 @@ def parse(g, words):
         
         heads = filter(isHead, s[-1])
   
-        return [ParseNode(x.completed[0]) for x in heads]
+        return [recursive_tree(x.completed[0]) for x in heads]
         
 def predictor(g, state, i):
     predictions = set()
@@ -175,5 +180,19 @@ def completer(state, i, s):
             x.end = i
             completed.append(x)
 
-
     return completed
+
+def recursive_tree(state):
+    node = ParseNode(state.rule.lhs)
+    node.prob = state.rule.prob
+    node.start = state.origin
+    node.end = state.end
+
+    for child in state.completed:
+        node.append(recursive_tree(child))
+
+    return node
+
+
+
+

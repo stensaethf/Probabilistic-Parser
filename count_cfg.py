@@ -4,18 +4,22 @@ from collections import Counter
 def read_trees(f):
     tokens = []
     for line in f:
+        print line
         line = line.replace('(', ' ( ')
         line = line.replace(')', ' ) ')
         tokens.extend(line.split())
-    
+
+    if tokens[0] == '(':
+        tokens.insert(0, 'BETA')
     return recursiveParse(tokens).children
     
 def recursiveParse(tokens):
     nodeValue = tokens.pop(0)
+
     if nodeValue == '(':
-        nodeValue = 'TOP'
-        tokens.insert(0, '(')
-    
+        nodeValue = tokens.pop(0)
+        tokens.pop()
+
     node = parse.ParseNode(nodeValue)
     while len(tokens):
         token = tokens.pop(0)
@@ -25,11 +29,12 @@ def recursiveParse(tokens):
             node.append(recursiveParse(tokens))
         else:
             node.append(parse.ParseNode(token))
-        
-    if len(node.children)==1 and node.children[0].isLeaf():
-        print node
+
+    if len(node.children)==1: #and node.children[0].isLeaf():
+        # print node.children
         if node.value == node.children[0].value:
-            node.children = list()
+            # node.children = list()
+            node.children = node.children[0].children
     
     return node
         
@@ -43,27 +48,23 @@ def main():
         file_path = sys.argv[1]+'/'+path
         f = open(file_path, 'rb')
         trees.extend(read_trees(f))
-    
-#    for tree in trees:
-#        if '``' in tree:
-#            print tree
-        
-#    print 'Converting trees to grammar'
-#    g = grammar.Grammar(nodes = trees)
-#    g.write(open('cfg.txt', 'wb'))
-#    print 'Converting grammar to CNF'
-#    g.convertToCNF()
-##    for rule in g.NR['NAC'].values():
-##        print rule
-#    g.write(open('cnf.txt', 'wb'))
-    
-#    print 'Parsing Sentence'
-#    words = ['the', 'dog', 'showed']
-#    parsed_trees = parse.parse(g, words)
-#    print len(parsed_trees)
-#    for tree in parsed_trees:
-#        l=tree.__str__()
-#        print
+
+    print 'Converting trees to grammar'
+    print trees[0]
+    g = grammar.Grammar(nodes = trees)
+    g.write(open('cfg.txt', 'wb'))
+    print 'Converting grammar to CNF'
+    g.convertToCNF()
+    g.write(open('cnf.txt', 'wb'))
+
+    print 'Parsing Sentence'
+    words = ['He', 'glowered', 'down', 'at', 'her']
+    #  (TOP (S (NP (PRP He)) (VP (VBD glowered) (ADVP (RP down)) 
+    # (PP (IN at) (NP (PRP her))))))
+    parsed_trees = parse.parse(g, words)
+    print len(parsed_trees)
+    for tree in parsed_trees:
+        print tree.recursive_print(0)
 #    
 if __name__=='__main__':
     main()
