@@ -156,7 +156,26 @@ def insideOutside(sentence, grammar):
     print gamma
     
 def main():
+    trees = []
+    print 'Parsing trees'
+    for path in os.listdir(sys.argv[1]):
+        if path.split('.')[1] != 'prd':
+            continue
+            
+        file_path = sys.argv[1]+'/'+path
+        f = open(file_path, 'rb')
+        trees.extend(count_cfg.read_trees(f))
+
+    print 'Converting trees to grammar'
+    g = grammar.Grammar(nodes = trees)
     
+    g.write(open('cfg', 'wb'))
+    g.convertToCNF()
+    
+    
+    print 'Parsing Sentence'
+    words = ['He', 'glowered', 'down', 'at', 'her']
+    inside_out.insideOutside(words, g)
     
 
 if __name__=='__main__':
