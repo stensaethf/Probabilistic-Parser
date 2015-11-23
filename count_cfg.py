@@ -2,8 +2,8 @@ import sys, os, types, counts, grammar, parse
 from collections import Counter
 
 import cky, node
-import time
 import pickle
+import inside_out
 
 def read_trees(f):
     tokens = []
@@ -64,20 +64,37 @@ def main():
     #  (TOP (S (NP (PRP He)) (VP (VBD glowered) (ADVP (RP down)) 
     # (PP (IN at) (NP (PRP her))))))
     
-    pickle.dump(g, open('grammar.p', 'wb'))
-    g = pickle.load(open('grammar.p', 'rb'))
+    # pickle.dump(g, open('grammar.p', 'wb'))
+    # g = pickle.load(open('grammar.p', 'rb'))
 
-    start_time = time.time()
-    cky.printParseTrees(cky.cky(g, words))
-    end_time = time.time()
+    nodes_back = cky.cky(g, words)
+    # best_pot = 0
+    # best_tree = None
+    # for node in nodes_back:
+    #     if node.root == 'TOP':
+    #         if best_tree == None:
+    #             best_tree = node
+    #             best_pot = inside_out.potential(node, g)
+    #         pot = inside_out.potential(node, g)
+    #         print(pot)
+    #         print(best_pot)
+    #         print(pot > best_pot)
+    #         if pot > best_pot:
+    #             best_pot = pot
+    #             best_tree = node
 
-    print('Time:')
-    print(end_time - start_time)
+    def isTop(node):
+        return node.root == 'TOP'
 
-    # parsed_trees = parse.parse(g, words)
-    # print len(parsed_trees)
-    # for tree in parsed_trees:
-    #     print tree
-#    
+    node_back = filter(isTop, nodes_back)
+    node_back = [(node, inside_out.potential(node, g)) for node in node_back]
+    node_back.sort(key=lambda node: -1*node[1])
+    print(cky.getParseTree(node_back[1][0], 5)) 
+    print(cky.getParseTree(node_back[2][0], 5)) 
+    print(cky.getParseTree(node_back[3][0], 5)) 
+
+    # print(cky.getParseTree(best_tree, 5))
+
+    
 if __name__=='__main__':
     main()

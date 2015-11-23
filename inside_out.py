@@ -9,6 +9,7 @@ Frederik Roenn Stensaeth, Phineas Callahan
 
 from math import log
 import parse
+import grammar
 
 def potential(tree, grammar):
 	"""
@@ -17,17 +18,17 @@ def potential(tree, grammar):
 	@params: xx
 	@return: xx
 	"""
-	potential = 0
+	pot = 0
 
 	if tree.status:
 		# Potential of a leaf is 0 (log scale).
-		return potential
+		return pot
 	else:
 		left = tree.left
 		right = tree.right
 
-		potential += potential(left, grammar)
-		potential += potential(right, grammar)
+		pot += potential(left, grammar)
+		pot += potential(right, grammar)
 
 		prob = 1
 		# Probability of root going to its children.
@@ -37,7 +38,7 @@ def potential(tree, grammar):
 				B = derivation[0]
 				C = derivation[1]
 				if B == left.root and C == right.root:
-					prob = log(rule.prob)
+					prob = rule.prob
 		# child_list = []
 		# for child in root.children:
 		# 	child_list.append(child.value)
@@ -45,9 +46,9 @@ def potential(tree, grammar):
 
 		# prob = grammar.rules[root.value][' '.join(child_list)]
 
-		potential += log(prob)
+		pot += log(prob)
 
-	return potential
+	return pot
 
 def calculateInsideProbabilities(sentence_list, grammar):
 	"""

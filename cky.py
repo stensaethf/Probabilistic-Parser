@@ -114,11 +114,11 @@ def printParseTrees(nodes_back):
 	check = False
 	for node in nodes_back:
 		if node.root == 'TOP':
-			print(node.start)
-			print(node.end)
-			print(node.prob)
-			print
-			# print(getParseTree(node, 5))
+			# print(node.start)
+			# print(node.end)
+			# print(node.prob)
+			# print
+			print(getParseTree(node, 5))
 			# print
 			check = True
 
