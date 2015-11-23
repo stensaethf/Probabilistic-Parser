@@ -73,12 +73,12 @@ class Grammar:
             #     print rule
             self.add_rule(rule)
             
-        g.non_terminals = set(self.NR.keys())
+        self.non_terminals = set(self.NR.keys())
         for lhs in self.NR:
-            for rule in self.NR[lhs]:
-                g.non_terminals.update(rule.rhs)
+            for rule in self.NR[lhs].values():
+                self.non_terminals.update(rule.rhs)
                 
-        g.terminals = set(self.TR.keys())
+        self.terminals = set(self.TR.keys())
         
         
     def UNIT(self, rules):

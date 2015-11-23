@@ -9,29 +9,49 @@ Frederik Roenn Stensaeth, Phineas Callahan
 
 from math import log
 import parse
+import grammar
 
-def potential(root, grammar):
+def potential(tree, grammar):
 	"""
 	potential() xx
 
 	@params: xx
 	@return: xx
 	"""
-	potential = 0
+	pot = 0
 
-	if root.children == []
-		return potential
+	if tree.status:
+		# Potential of a leaf is 0 (log scale).
+		return pot
 	else:
-		child_list = []
-		for child in root.children:
-			child_list.append(child.value)
-			potential += potential(child, grammar)
+		left = tree.left
+		right = tree.right
 
-		prob = grammar.rules[root.value][' '.join(child_list)]
+		pot += potential(left, grammar)
+		pot += potential(right, grammar)
 
-		potential += log(prob)
+		prob = 1
+		# Probability of root going to its children.
 
-	return potential
+		# check = False
+		for rule in grammar.NR[tree.root].values():
+			derivation = rule.rhs
+			if len(derivation) == 2:
+				B = derivation[0]
+				C = derivation[1]
+				if B == left.root and C == right.root:
+					prob = rule.prob
+					# check = True
+		# child_list = []
+		# for child in root.children:
+		# 	child_list.append(child.value)
+		# 	potential += potential(child, grammar)
+
+		# prob = grammar.rules[root.value][' '.join(child_list)]
+		# print(check)
+		pot += log(prob)
+
+	return pot
 
 def alpha(sentence, grammar, trees):
 	"""
@@ -67,7 +87,6 @@ def alpha(sentence, grammar, trees):
 	return alpha
 
 def beta(sentence, grammar, trees):
-    
     beta = {lhs: [[0]*n]*n for lhs in g.non_terminals}
     n = len(sentence)
     
@@ -101,7 +120,7 @@ def beta(sentence, grammar, trees):
                         beta[rule.rhs[1]][i][j] += prod
                         
     return beta
-                        
+	
 def insideOutside(xx):
 	"""
 	insideOutside() xx
