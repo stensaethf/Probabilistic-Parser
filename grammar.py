@@ -36,7 +36,8 @@ class Grammar:
     
     def __init__(self, E = None, N = None, R = None, S = 'TOP', nodes = None):
         if len(nodes):
-            E, N, R = self.transform_nodes(nodes)
+            count = self.transform_nodes(nodes)
+            E, N, R = self.from_count(count)
         
         self.non_terminals = N
         self.terminals = E
@@ -213,6 +214,14 @@ class Grammar:
         count = {}
         for node in nodes:
             self.recursive_count(node, count)
+                
+        return count
+
+    
+    def from_count(self, count):
+        non_terminals = set()
+        terminals = set()
+        rules = {}
         
         for lhs in count:
             lhs_sum = sum(count[lhs].values())
@@ -255,6 +264,11 @@ class Grammar:
                 
             for child in node.children:
                 self.recursive_count(child, count)
+                
+    def normalize(self):
+        it_is_3am = {}
+        
+        
     
                 
 def read_grammar(input_file):
