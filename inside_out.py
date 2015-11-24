@@ -242,7 +242,7 @@ def main():
 
         print('Min tree:')
         print(cky.getParseTree(min_tree, 5))
-    else:
+    elif len(sys.argv) == 2:
         if os.path.isfile('grammar.p'):
             g = pickle.load(open('grammar.p', 'rb'))
         else:
@@ -275,10 +275,10 @@ def main():
                      ['He', 'glowered', 'down', 'at', 'her']]
 
         for t in range(5):
-            num_t = [len(g.TR[lhs]) for lhs in g.TR]
-            num_n = [len(g.NR[lhs]) for lhs in g.NR]
+            # num_t = [len(g.TR[lhs]) for lhs in g.TR]
+            # num_n = [len(g.NR[lhs]) for lhs in g.NR]
 
-            print sum(num_t), sum(num_n)
+            # print sum(num_t), sum(num_n)
             to_del = []
             count = {}
             for sent in sentences:
@@ -311,7 +311,17 @@ def main():
             node_back = [(node, potential(node, g)) for node in node_back]
             node_back.sort(key=lambda node: -1*node[1])
             cky.printParseTrees([node_back[0][0]])
-
+    else:
+        print('Error. Invalid number of arguments.')
+        print('Two options for running:')
+        print('Usage: $ inside_out.py <directory>')
+        print 'Note: only files ending in .prd in the directory provided', \
+            'will be read into a grammar.'
+        print 'Note: .prd files need to be in s-expression form.'
+        print 'OR:'
+        print('Usage: $ inside_out.py <grammar file> <string to be parsed>')
+        print 'Note: grammar file needs to be in s-expression form.'
+        sys.exit()
 
 
 
